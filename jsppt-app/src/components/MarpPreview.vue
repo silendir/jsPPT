@@ -27,7 +27,7 @@
           <div class="spinner"></div>
           <p>正在渲染...</p>
         </div>
-        <div v-else class="marp-preview" v-html="renderedHTML"></div>
+        <div v-else class="marp-preview" ref="previewContainer" v-html="renderedHTML"></div>
       </div>
       <div class="preview-footer">
         <div class="navigation-controls">
@@ -63,6 +63,7 @@ export default {
     const currentSlide = ref(0);
     const selectedTheme = ref(props.initialTheme);
     const availableThemes = ref(getAvailableThemes());
+    const previewContainer = ref(null);
 
     // 获取当前主题名称
     const currentThemeName = computed(() => {
@@ -93,28 +94,89 @@ export default {
           markdownContent = `---\nmarp: true\ntheme: ${selectedTheme.value}\npaginate: true\n---\n\n${markdownContent}`;
         }
 
-        // 动态导入Marp库以减小初始加载体积
-        const { Marp } = await import('@marp-team/marp-core');
+        try {
+          // 动态导入Marp库
+          const { Marp } = await import('@marp-team/marp-core');
 
-        // 创建Marp实例
-        const marp = new Marp({
-          inlineSVG: true,
-          html: true,
-          math: true
-        });
+          // 创建Marp实例
+          const marp = new Marp({
+            inlineSVG: true,
+            html: true,
+            math: true
+          });
 
-        // 添加自定义主题（如果有）
-        // 这里可以添加自定义主题的代码
+          // 渲染Markdown
+          const { html, css } = marp.render(markdownContent);
 
-        // 渲染Markdown
-        const { html } = marp.render(markdownContent);
-        renderedHTML.value = html;
+          // 创建完整HTML
+          const fullHTML = `
+            <style>${css}</style>
+            ${html}
+          `;
 
-        // 计算幻灯片数量
-        slideCount.value = (html.match(/<section/g) || []).length;
+          // 设置HTML内容
+          renderedHTML.value = fullHTML;
 
-        // 重置当前幻灯片
-        currentSlide.value = 0;
+          // 计算幻灯片数量
+          const slideMatches = html.match(/<section/g);
+          slideCount.value = slideMatches ? slideMatches.length : 0;
+
+          // 如果没有幻灯片，可能是渲染失败
+          if (slideCount.value === 0) {
+            console.warn('未检测到幻灯片，可能渲染失败');
+            // 使用备用方法计算幻灯片数量
+            const slides = markdownContent.split(/\n---\n/);
+            slideCount.value = slides.length;
+          }
+        } catch (error) {
+          console.error('Marp渲染错误:', error);
+
+          // 使用备用渲染方法
+          const slides = markdownContent.split(/\n---\n/);
+
+          // 创建HTML
+          let html = '<div class="marp-slides">';
+
+          // 处理每张幻灯片
+          slides.forEach((slide, index) => {
+            // 移除前置元数据（如果是第一张幻灯片）
+            if (index === 0 && slide.startsWith('---')) {
+              const metadataEnd = slide.indexOf('---', 3) + 3;
+              if (metadataEnd > 2) {
+                slide = slide.substring(metadataEnd).trim();
+              }
+            }
+
+            // 简单的Markdown到HTML转换
+            let slideContent = slide
+              // 标题转换
+              .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+              .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+              .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+              // 列表转换
+              .replace(/^- (.*?)$/gm, '<li>$1</li>')
+              .replace(/<\/li>\n<li>/g, '</li><li>')
+              .replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>')
+              // 段落转换
+              .replace(/^([^<].*?)$/gm, '<p>$1</p>')
+              .replace(/<p><\/p>/g, '')
+              // 图片转换
+              .replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2" style="max-width: 100%;">')
+              // 链接转换
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+
+            // 添加幻灯片
+            html += `<section class="slide" id="slide-${index+1}">${slideContent}</section>`;
+          });
+
+          html += '</div>';
+
+          // 设置HTML内容
+          renderedHTML.value = html;
+
+          // 设置幻灯片数量
+          slideCount.value = slides.length;
+        }
       } catch (error) {
         console.error('Markdown渲染失败:', error);
         renderedHTML.value = `<div class="error">渲染失败: ${error.message}</div>`;
@@ -149,7 +211,7 @@ export default {
     // 导航到指定幻灯片
     const navigateToSlide = (index) => {
       const sections = document.querySelectorAll('.marp-preview section');
-      if (sections.length > 0) {
+      if (sections.length > 0 && sections[index]) {
         // 滚动到指定幻灯片
         sections[index].scrollIntoView({ behavior: 'smooth' });
       }
@@ -202,6 +264,8 @@ export default {
       selectedTheme.value = newTheme;
       renderMarkdown();
     });
+
+
 
     // 组件挂载时渲染
     onMounted(() => {
@@ -404,6 +468,28 @@ export default {
 .marp-preview {
   height: 100%;
   overflow-y: auto;
+  display: block;
+}
+
+.marp-slides {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.slide {
+  background-color: white;
+  margin: 0 auto 30px;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1000px;
+  aspect-ratio: 16 / 9;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
 }
 
 .error {
