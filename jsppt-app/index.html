@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jsPPT - AI演示文稿生成器</title>
+    <meta name="description" content="jsPPT是一个基于Web技术的单页应用，旨在通过简单的提示词输入生成专业的PPT/PDF格式演示文稿。">
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="/src/main.js" as="script">
+    <link rel="preload" href="/src/App.vue" as="script">
+    
+    <!-- PWA相关 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4361ee">
+    
+    <!-- 移动端优化 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+    
+    <!-- 浏览器兼容性提示 -->
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h2>jsPPT需要JavaScript支持</h2>
+        <p>请启用浏览器的JavaScript功能以使用jsPPT。</p>
+      </div>
+    </noscript>
+  </body>
+</html>
