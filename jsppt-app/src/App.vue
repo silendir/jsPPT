@@ -347,7 +347,7 @@ export default {
     const showHelp = ref(false);
     const isEditingMarkdown = ref(false);
     const modelService = ref(null);
-    const executionMode = ref('auto');
+    const executionMode = ref('wasm'); // 默认使用CPU模式
     const selectedTheme = ref('default');
     const slideCount = ref('auto');
     const presentationStyle = ref('professional');
@@ -625,8 +625,8 @@ export default {
       // 添加键盘事件监听
       window.addEventListener('keydown', handleKeyDown);
 
-      // 自动加载模型（可选）
-      // loadModel();
+      // 自动加载模型
+      loadModel();
     });
 
     // 组件卸载前释放模型资源

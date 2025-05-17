@@ -673,7 +673,6 @@ section.title h2 {
   font-weight: 400;
 }
 `
-}
 };
 
 /**
@@ -867,8 +866,9 @@ async function renderMarkdownToHTML(markdown, theme = 'default') {
  */
 export async function exportToPDF(markdown, filename = 'presentation.pdf', theme = 'default', options = {}) {
   try {
-    // 动态导入html2pdf库
-    const html2pdf = (await import('html2pdf.js')).default;
+    // 动态导入jspdf和html2canvas库
+    const jsPDF = (await import('jspdf')).default;
+    const html2canvas = (await import('html2canvas')).default;
 
     // 渲染Markdown为HTML
     const renderResult = await renderMarkdownToHTML(markdown, theme);
@@ -908,27 +908,85 @@ export async function exportToPDF(markdown, filename = 'presentation.pdf', theme
       });
     });
 
-    // 使用html2pdf将HTML转换为PDF
-    const pdfOptions = {
-      margin: options.margin || 0.5,
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: options.scale || 2,
-        useCORS: true,
-        letterRendering: true,
-        logging: false
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: options.format || 'a4',
-        orientation: options.orientation || 'landscape',
-        compress: true
-      }
-    };
+    // 获取所有幻灯片元素
+    const slides = container.querySelectorAll('section');
+    if (!slides || slides.length === 0) {
+      throw new Error('未找到幻灯片内容');
+    }
 
-    // 生成PDF并触发下载
-    await html2pdf().set(pdfOptions).from(container).save();
+    // 创建PDF文档
+    const format = options.format || 'a4';
+    const orientation = options.orientation || 'landscape';
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'mm',
+      format: format,
+      compress: true
+    });
+
+    // 设置PDF选项
+    const scale = options.scale || 2;
+    const margin = options.margin || 5;
+
+    // 计算PDF页面尺寸
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // 处理每张幻灯片
+    for (let i = 0; i < slides.length; i++) {
+      // 克隆幻灯片以便单独处理
+      const slide = slides[i].cloneNode(true);
+      const tempDiv = document.createElement('div');
+      tempDiv.appendChild(slide);
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      // 设置幻灯片样式以便正确渲染
+      slide.style.width = '1280px'; // 16:9比例的宽度
+      slide.style.height = '720px'; // 16:9比例的高度
+      slide.style.display = 'flex';
+      slide.style.flexDirection = 'column';
+      slide.style.justifyContent = 'flex-start';
+      slide.style.alignItems = 'flex-start';
+      slide.style.padding = '40px';
+      slide.style.boxSizing = 'border-box';
+      slide.style.backgroundColor = 'white';
+      slide.style.overflow = 'hidden';
+
+      try {
+        // 使用html2canvas将幻灯片转换为canvas
+        const canvas = await html2canvas(slide, {
+          scale: scale,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          allowTaint: true,
+          backgroundColor: 'white'
+        });
+
+        // 将canvas转换为图片
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+        // 计算图片尺寸以适应PDF页面
+        const imgWidth = pdfWidth - (margin * 2);
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // 添加图片到PDF
+        pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+
+        // 如果不是最后一张幻灯片，添加新页面
+        if (i < slides.length - 1) {
+          pdf.addPage();
+        }
+      } finally {
+        // 清理临时元素
+        document.body.removeChild(tempDiv);
+      }
+    }
+
+    // 保存PDF
+    pdf.save(filename);
 
     // 清理临时DOM元素
     document.body.removeChild(container);
@@ -937,7 +995,87 @@ export async function exportToPDF(markdown, filename = 'presentation.pdf', theme
     return true;
   } catch (error) {
     console.error('PDF导出失败:', error);
-    throw error;
+
+    // 尝试使用备用方法
+    try {
+      console.log('尝试使用备用方法导出PDF...');
+      return await exportToPDFFallback(markdown, filename, theme, options);
+    } catch (fallbackError) {
+      console.error('备用PDF导出方法也失败:', fallbackError);
+      throw error; // 抛出原始错误
+    }
+  }
+}
+
+/**
+ * 备用PDF导出方法
+ * @param {String} markdown Markdown内容
+ * @param {String} filename 文件名
+ * @param {String} theme 主题名称
+ * @param {Object} options 导出选项
+ * @returns {Promise<Boolean>} 是否导出成功
+ */
+async function exportToPDFFallback(markdown, filename = 'presentation.pdf', theme = 'default', options = {}) {
+  // 动态导入jspdf和html2canvas库
+  const jsPDF = (await import('jspdf')).default;
+
+  // 渲染Markdown为HTML
+  const renderResult = await renderMarkdownToHTML(markdown, theme);
+  const { html: fullHTML, slideCount } = renderResult;
+
+  // 创建一个临时的DOM元素来渲染HTML
+  const container = document.createElement('div');
+  container.innerHTML = fullHTML;
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  document.body.appendChild(container);
+
+  try {
+    // 创建PDF文档
+    const format = options.format || 'a4';
+    const orientation = options.orientation || 'landscape';
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'mm',
+      format: format
+    });
+
+    // 获取所有幻灯片元素
+    const slides = container.querySelectorAll('section');
+    if (!slides || slides.length === 0) {
+      throw new Error('未找到幻灯片内容');
+    }
+
+    // 使用简单的文本提取方法
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
+
+      // 提取文本内容
+      const title = slide.querySelector('h1, h2, h3')?.textContent || '';
+      const textContent = slide.textContent || '';
+
+      // 添加到PDF
+      pdf.setFontSize(24);
+      pdf.text(title, 20, 20);
+
+      pdf.setFontSize(12);
+      const lines = pdf.splitTextToSize(textContent, pdf.internal.pageSize.getWidth() - 40);
+      pdf.text(lines, 20, 40);
+
+      // 如果不是最后一张幻灯片，添加新页面
+      if (i < slides.length - 1) {
+        pdf.addPage();
+      }
+    }
+
+    // 保存PDF
+    pdf.save(filename);
+
+    console.log(`成功使用备用方法导出PDF，共${slideCount}张幻灯片`);
+    return true;
+  } finally {
+    // 清理临时DOM元素
+    document.body.removeChild(container);
   }
 }
 
@@ -951,7 +1089,8 @@ export async function exportToPDF(markdown, filename = 'presentation.pdf', theme
 export async function exportToPPTX(markdown, filename = 'presentation.pptx', theme = 'default') {
   try {
     // 动态导入pptxgenjs库
-    const pptxgen = (await import('pptxgenjs')).default;
+    const pptxgenModule = await import('pptxgenjs');
+    const pptxgen = pptxgenModule.default || pptxgenModule;
 
     // 确保Markdown包含正确的元数据
     const processedMarkdown = ensureMarpMetadata(markdown, theme);

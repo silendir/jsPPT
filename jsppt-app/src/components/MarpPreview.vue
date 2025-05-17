@@ -231,9 +231,142 @@ export default {
     const exportPDF = async () => {
       try {
         emit('export', { type: 'pdf', theme: selectedTheme.value });
-        await exportToPDF(props.markdown, 'presentation.pdf', selectedTheme.value);
+
+        // 创建导出中提示
+        const exportingMessage = document.createElement('div');
+        exportingMessage.style.position = 'fixed';
+        exportingMessage.style.top = '50%';
+        exportingMessage.style.left = '50%';
+        exportingMessage.style.transform = 'translate(-50%, -50%)';
+        exportingMessage.style.padding = '20px';
+        exportingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        exportingMessage.style.color = 'white';
+        exportingMessage.style.borderRadius = '8px';
+        exportingMessage.style.zIndex = '10000';
+        exportingMessage.style.fontWeight = 'bold';
+        exportingMessage.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+        exportingMessage.style.minWidth = '250px';
+        exportingMessage.style.textAlign = 'center';
+        exportingMessage.textContent = '正在导出PDF，请稍候...';
+        document.body.appendChild(exportingMessage);
+
+        try {
+          // 使用更新后的exportToPDF函数，传递自定义选项
+          await exportToPDF(props.markdown, 'presentation.pdf', selectedTheme.value, {
+            orientation: 'landscape',
+            format: 'a4'
+          });
+
+          // 导出成功
+          exportingMessage.textContent = 'PDF导出成功！';
+          exportingMessage.style.backgroundColor = 'rgba(16, 185, 129, 0.8)';
+          setTimeout(() => {
+            document.body.removeChild(exportingMessage);
+          }, 2000);
+        } catch (error) {
+          // 导出失败
+          console.error('PDF导出失败:', error);
+
+          // 显示更友好的错误信息
+          let errorMessage = error.message;
+
+          // 处理常见错误
+          if (errorMessage.includes('u2 is not a function') ||
+              errorMessage.includes('Cannot read properties of undefined') ||
+              errorMessage.includes('jsPDF')) {
+
+            errorMessage = '导出格式错误，正在尝试替代方案...';
+            exportingMessage.textContent = errorMessage;
+
+            // 尝试使用直接打印方法
+            try {
+              exportingMessage.textContent = '正在准备打印预览...';
+
+              // 获取当前预览的HTML内容
+              const previewElement = document.querySelector('.marp-preview');
+              if (!previewElement) {
+                throw new Error('无法找到预览内容');
+              }
+
+              // 创建打印窗口
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) {
+                throw new Error('无法打开打印窗口，请检查浏览器是否阻止了弹出窗口');
+              }
+
+              // 写入HTML内容
+              const styleContent = previewElement.querySelector('style')?.innerHTML || '';
+
+              // 使用数组和join方法拼接HTML字符串，避免Vue编译器解析HTML标签
+              const htmlContent = [
+                '<!DOCTYPE html>',
+                '<html>',
+                '<head>',
+                  '<title>jsPPT演示文稿</title>',
+                  '<style>',
+                    'body { margin: 0; padding: 0; }',
+                    '.print-container { width: 100%; }',
+                    'section { ',
+                      'page-break-after: always; ',
+                      'height: 100vh;',
+                      'display: flex;',
+                      'flex-direction: column;',
+                      'justify-content: center;',
+                      'padding: 40px;',
+                      'box-sizing: border-box;',
+                    '}',
+                    'section:last-child { page-break-after: auto; }',
+                    '@media print {',
+                      'body { background: white; }',
+                      'section { ',
+                        'height: 100%; ',
+                        'page-break-inside: avoid;',
+                      '}',
+                    '}',
+                    styleContent,
+                  '</style>',
+                '</head>',
+                '<body>',
+                  '<div class="print-container">',
+                    previewElement.innerHTML,
+                  '</div>',
+                  '<scr' + 'ipt>',
+                    '// 自动打印',
+                    'window.onload = function() {',
+                      'setTimeout(function() {',
+                        'window.print();',
+                      '}, 500);',
+                    '};',
+                  '</scr' + 'ipt>',
+                '</body>',
+                '</html>'
+              ].join('');
+
+              printWindow.document.write(htmlContent);
+              printWindow.document.close();
+
+              // 导出成功
+              exportingMessage.textContent = '已打开打印预览，请使用浏览器的打印功能保存为PDF';
+              exportingMessage.style.backgroundColor = 'rgba(16, 185, 129, 0.8)';
+              setTimeout(() => {
+                document.body.removeChild(exportingMessage);
+              }, 3000);
+
+              return;
+            } catch (fallbackError) {
+              console.error('打印预览失败:', fallbackError);
+              errorMessage = '所有导出方法均失败，请尝试使用浏览器的打印功能';
+            }
+          }
+
+          exportingMessage.textContent = `PDF导出失败: ${errorMessage}`;
+          exportingMessage.style.backgroundColor = 'rgba(220, 38, 38, 0.8)';
+          setTimeout(() => {
+            document.body.removeChild(exportingMessage);
+          }, 3000);
+        }
       } catch (error) {
-        console.error('PDF导出失败:', error);
+        console.error('PDF导出过程中发生错误:', error);
         alert(`PDF导出失败: ${error.message}`);
       }
     };
@@ -242,9 +375,41 @@ export default {
     const exportPPTX = async () => {
       try {
         emit('export', { type: 'pptx', theme: selectedTheme.value });
-        await exportToPPTX(props.markdown, 'presentation.pptx', selectedTheme.value);
+
+        // 显示导出中提示
+        const exportingMessage = document.createElement('div');
+        exportingMessage.style.position = 'fixed';
+        exportingMessage.style.top = '50%';
+        exportingMessage.style.left = '50%';
+        exportingMessage.style.transform = 'translate(-50%, -50%)';
+        exportingMessage.style.padding = '20px';
+        exportingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        exportingMessage.style.color = 'white';
+        exportingMessage.style.borderRadius = '8px';
+        exportingMessage.style.zIndex = '10000';
+        exportingMessage.style.fontWeight = 'bold';
+        exportingMessage.textContent = '正在导出PPTX，请稍候...';
+        document.body.appendChild(exportingMessage);
+
+        try {
+          await exportToPPTX(props.markdown, 'presentation.pptx', selectedTheme.value);
+          // 导出成功
+          exportingMessage.textContent = 'PPTX导出成功！';
+          exportingMessage.style.backgroundColor = 'rgba(16, 185, 129, 0.8)';
+          setTimeout(() => {
+            document.body.removeChild(exportingMessage);
+          }, 2000);
+        } catch (error) {
+          // 导出失败
+          console.error('PPTX导出失败:', error);
+          exportingMessage.textContent = `PPTX导出失败: ${error.message}`;
+          exportingMessage.style.backgroundColor = 'rgba(220, 38, 38, 0.8)';
+          setTimeout(() => {
+            document.body.removeChild(exportingMessage);
+          }, 3000);
+        }
       } catch (error) {
-        console.error('PPTX导出失败:', error);
+        console.error('PPTX导出过程中发生错误:', error);
         alert(`PPTX导出失败: ${error.message}`);
       }
     };
