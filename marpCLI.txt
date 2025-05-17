@@ -1,0 +1,1155 @@
+TITLE: Using Marp CLI Observation API
+DESCRIPTION: Example of handling Marp CLI observation modes (watch, server, preview) using waitForObservation helper. Shows how to properly manage and stop observations.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_42
+
+LANGUAGE: javascript
+CODE:
+```
+const { marpCli, waitForObservation } = require('@marp-team/marp-cli')
+
+marpCli(['--server', './slides/'])
+  .then((exitCode) => console.log(`Done with exit code ${exitCode}`))
+  .catch(console.error)
+
+waitForObservation().then(({ stop }) => {
+  console.log('Observed')
+
+  // Stop observations to resolve marpCli()'s Promise
+  stop()
+})
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to PDF with Marp CLI
+DESCRIPTION: Examples of converting Markdown to PDF using Marp CLI with the --pdf option.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_12
+
+LANGUAGE: bash
+CODE:
+```
+marp --pdf slide-deck.md
+marp slide-deck.md -o converted.pdf
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to HTML with Marp CLI
+DESCRIPTION: Basic usage examples for converting Markdown to HTML using Marp CLI.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_11
+
+LANGUAGE: bash
+CODE:
+```
+marp slide-deck.md
+marp slide-deck.md -o output.html
+```
+
+----------------------------------------
+
+TITLE: Marp Engine Configuration with Plugin
+DESCRIPTION: Example of configuring Marp engine with markdown-it-container plugin in marp.config.mjs
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_35
+
+LANGUAGE: javascript
+CODE:
+```
+// marp.config.mjs
+import markdownItContainer from 'markdown-it-container'
+
+export default {
+  // Customize engine on configuration file directly
+  engine: ({ marp }) => marp.use(markdownItContainer, 'custom'),
+}
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to HTML with Marp CLI using npx
+DESCRIPTION: Examples of using npx to run Marp CLI for converting Markdown slides to HTML without installation.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+# Convert slide deck into HTML
+npx @marp-team/marp-cli@latest slide-deck.md
+npx @marp-team/marp-cli@latest slide-deck.md -o output.html
+```
+
+----------------------------------------
+
+TITLE: Adding TypeScript Type Annotations for Marp Config
+DESCRIPTION: Example of adding JSDoc type annotations to enable autocompletion support in IDEs when configuring Marp CLI.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_37
+
+LANGUAGE: javascript
+CODE:
+```
+/** @type {import('@marp-team/marp-cli').Config} */
+const config = {
+  // ...
+}
+
+export default config
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to PNG/JPEG images with Marp CLI
+DESCRIPTION: Examples of converting Markdown slides to multiple PNG or JPEG images using Marp CLI.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_15
+
+LANGUAGE: bash
+CODE:
+```
+# Convert into multiple PNG image files
+marp --images png slide-deck.md
+
+# Convert into multiple JPEG image files
+marp --images jpeg slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Creating Marp Presentation Slides in Markdown
+DESCRIPTION: Demonstrates how to create slides in a Marp presentation using Markdown syntax. Includes examples of headings, paragraphs, and HTML comments for presenter notes.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/demo.md#2025-04-16_snippet_1
+
+LANGUAGE: markdown
+CODE:
+```
+# Hello, I'm Marp CLI!
+
+Write and convert your presentation deck with just a plain Markdown!
+
+<!-- You can also write down presenter notes in HTML comments. -->
+
+---
+
+<!-- backgroundColor: beige -->
+
+## Watch and preview
+
+Marp CLI is supported watch mode and preview window.
+
+---
+
+# <!--fit--> :+1:
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to PDF with Marp CLI using npx
+DESCRIPTION: Examples of using npx to run Marp CLI for converting Markdown slides to PDF without installation.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_1
+
+LANGUAGE: bash
+CODE:
+```
+# Convert slide deck into PDF
+npx @marp-team/marp-cli@latest slide-deck.md --pdf
+npx @marp-team/marp-cli@latest slide-deck.md -o output.pdf
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to PowerPoint with Marp CLI using npx
+DESCRIPTION: Examples of using npx to run Marp CLI for converting Markdown slides to PowerPoint (PPTX) without installation.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_2
+
+LANGUAGE: bash
+CODE:
+```
+# Convert slide deck into PowerPoint document (PPTX)
+npx @marp-team/marp-cli@latest slide-deck.md --pptx
+npx @marp-team/marp-cli@latest slide-deck.md -o output.pptx
+```
+
+----------------------------------------
+
+TITLE: Generating editable PowerPoint with Marp CLI
+DESCRIPTION: Example of generating an editable PowerPoint document using Marp CLI with the experimental --pptx-editable option.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_14
+
+LANGUAGE: bash
+CODE:
+```
+marp --pptx --pptx-editable slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Converting Markdown to PowerPoint with Marp CLI
+DESCRIPTION: Examples of converting Markdown to PowerPoint (PPTX) using Marp CLI with the --pptx option.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_13
+
+LANGUAGE: bash
+CODE:
+```
+marp --pptx slide-deck.md
+marp slide-deck.md -o converted.pptx
+```
+
+----------------------------------------
+
+TITLE: Installing Marp CLI globally with npm
+DESCRIPTION: Command to install Marp CLI globally using npm for system-wide access.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_10
+
+LANGUAGE: bash
+CODE:
+```
+npm install -g @marp-team/marp-cli
+```
+
+----------------------------------------
+
+TITLE: Creating Basic Slides in Marp Markdown
+DESCRIPTION: This snippet demonstrates the basic structure of a Marp presentation with two slides separated by '---' (three hyphens). The first slide has a level 1 heading, and the second slide contains plain text content.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_files/1.md#2025-04-16_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+# one
+
+---
+
+example
+```
+
+----------------------------------------
+
+TITLE: Installing Marp CLI locally in a Node.js project
+DESCRIPTION: Command to install Marp CLI as a development dependency in a Node.js project.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_9
+
+LANGUAGE: bash
+CODE:
+```
+npm install --save-dev @marp-team/marp-cli
+```
+
+----------------------------------------
+
+TITLE: Initializing Marp Presentation in Markdown
+DESCRIPTION: Sets up the initial Marp configuration for the presentation, enabling Marp and setting the theme to 'uncover'.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/demo.md#2025-04-16_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+---
+marp: true
+theme: uncover
+---
+```
+
+----------------------------------------
+
+TITLE: Using Marp CLI in watch mode with npx
+DESCRIPTION: Example of using npx to run Marp CLI in watch mode, which automatically updates output on file changes.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_3
+
+LANGUAGE: bash
+CODE:
+```
+# Watch mode
+npx @marp-team/marp-cli@latest -w slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Creating Split Animations for Custom Transitions
+DESCRIPTION: Demonstrates how to define different animations for outgoing and incoming slides using prefixed keyframe names. This example creates a 'slide-up' transition with separate animations for each slide.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_4
+
+LANGUAGE: css
+CODE:
+```
+/* Define `slide-up` transition */
+/* WARN: Incomplete example. See also "Backward navigation". */
+@keyframes marp-outgoing-transition-slide-up {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes marp-incoming-transition-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Running Marp CLI in server mode with npx
+DESCRIPTION: Example of using npx to run Marp CLI in server mode, which serves slides from a directory.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_4
+
+LANGUAGE: bash
+CODE:
+```
+# Server mode (Pass directory to serve)
+npx @marp-team/marp-cli@latest -s ./slides
+```
+
+----------------------------------------
+
+TITLE: Defining Simple Custom Transition with CSS Keyframes
+DESCRIPTION: Shows how to create a custom 'dissolve' transition by declaring CSS keyframes with the marp-transition prefix. This animation will be applied to both the outgoing and incoming slides.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_3
+
+LANGUAGE: css
+CODE:
+```
+/* Define `dissolve` transition */
+@keyframes marp-transition-dissolve {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Overriding Theme in Marp CLI
+DESCRIPTION: This command demonstrates how to override the default theme in Marp CLI using the --theme option, with the Gaia theme as an example.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_24
+
+LANGUAGE: bash
+CODE:
+```
+marp --theme gaia
+```
+
+----------------------------------------
+
+TITLE: Setting Default Transition Duration in Marp CLI
+DESCRIPTION: Explains how to set a custom default duration for transitions using the --marp-transition-duration property in the first keyframe.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_7
+
+LANGUAGE: css
+CODE:
+```
+@keyframes marp-incoming-transition-gate {
+  from {
+    --marp-transition-duration: 1s;
+
+    clip-path: inset(0 50%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes marp-outgoing-transition-backward-gate {
+  from {
+    clip-path: inset(0);
+  }
+  to {
+    clip-path: inset(0 50%);
+  }
+}
+@keyframes marp-incoming-transition-backward-gate {
+  from,
+  to {
+    z-index: -1;
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Using Custom Theme in Marp CLI
+DESCRIPTION: This command shows how to use a custom CSS file as a theme in Marp CLI by specifying the path to the CSS file.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_25
+
+LANGUAGE: bash
+CODE:
+```
+marp --theme custom-theme.css
+```
+
+----------------------------------------
+
+TITLE: Converting title slide to image with Marp CLI
+DESCRIPTION: Examples of converting only the first slide (title slide) to an image using Marp CLI.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_16
+
+LANGUAGE: bash
+CODE:
+```
+# Convert the title slide into an image
+marp --image png slide-deck.md
+marp slide-deck.md -o output.png
+```
+
+----------------------------------------
+
+TITLE: Setting Multiple Theme Files in Marp CLI
+DESCRIPTION: Commands showing how to set multiple theme CSS files and use a theme directory in Marp CLI
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_26
+
+LANGUAGE: bash
+CODE:
+```
+marp --theme-set theme-a.css theme-b.css theme-c.css -- deck-a.md deck-b.md
+
+# Theme directory
+marp --theme-set ./themes -- deck.md
+```
+
+----------------------------------------
+
+TITLE: Creating Zero-JS Slide Deck with Marp CLI
+DESCRIPTION: This command shows how to create a slide deck without any JavaScript by using the 'bare' template and Marpit engine in Marp CLI.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_23
+
+LANGUAGE: bash
+CODE:
+```
+marp --template bare --engine @marp-team/marpit slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Generating High-Resolution Image with Marp CLI
+DESCRIPTION: This command generates a high-resolution image of the title slide from a Markdown file using Marp CLI. It outputs a PNG file with double the default resolution.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_17
+
+LANGUAGE: bash
+CODE:
+```
+marp slide-deck.md -o title-slide@2x.png --image-scale 2
+```
+
+----------------------------------------
+
+TITLE: Selecting HTML Template in Marp CLI
+DESCRIPTION: This command demonstrates how to choose a built-in HTML template for Marp CLI conversion. The 'bespoke' template is used as an example.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_22
+
+LANGUAGE: bash
+CODE:
+```
+marp --template bespoke slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Creating a Python virtual environment for Marp CLI
+DESCRIPTION: Commands to create a new Python virtual environment, activate it, and install the @marp-team/marp-cli package using npm.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_configs/input-dir/slides/nested/slide.md#2025-04-16_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+python -m venv venv
+source venv/bin/activate
+npm install @marp-team/marp-cli
+```
+
+----------------------------------------
+
+TITLE: Exporting Presenter Notes with Marp CLI
+DESCRIPTION: These commands demonstrate how to export presenter notes from a Marp / Marpit Markdown file as a text file using the --notes option or by specifying a .txt output file.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_18
+
+LANGUAGE: bash
+CODE:
+```
+# Export presenter notes as a text
+marp --notes slide-deck.md
+marp slide-deck.md -o output.txt
+```
+
+----------------------------------------
+
+TITLE: Using Firefox for Image Conversion in Marp CLI
+DESCRIPTION: These commands demonstrate how to specify Firefox as the browser for image conversion, either as the primary choice or as a fallback option after Chrome.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_20
+
+LANGUAGE: bash
+CODE:
+```
+# Use Firefox for image conversion
+marp --browser firefox ./slide.md -o slide.png
+
+# Prefer to use Firefox first, then Chrome
+marp --browser firefox,chrome ./slide.md -o slide.png
+```
+
+----------------------------------------
+
+TITLE: Pulling Marp CLI Docker image from Docker Hub
+DESCRIPTION: Command to pull the official Marp CLI Docker image from Docker Hub.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_5
+
+LANGUAGE: bash
+CODE:
+```
+docker pull marpteam/marp-cli
+```
+
+----------------------------------------
+
+TITLE: Specifying Custom Browser Path in Marp CLI
+DESCRIPTION: These commands show how to explicitly set the path to a browser executable for use with Marp CLI, useful for Chromium-flavored browsers or when the default browser detection fails.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_21
+
+LANGUAGE: bash
+CODE:
+```
+# Use Chromium-flavored browser (Chromium, Brave, Vivaldi, etc...)
+marp --browser-path /path/to/chromium-flavored-browser ./slide.md -o slide.pdf
+
+# Use Firefox with explicitly set path
+marp --browser firefox --browser-path /path/to/firefox ./slide.md -o slide.png
+```
+
+----------------------------------------
+
+TITLE: Configuring Marp CLI Options in YAML
+DESCRIPTION: This YAML configuration file demonstrates various options for Marp CLI, including input, output, theme, and PDF settings.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_files/字/(non-ascii).md#2025-04-16_snippet_0
+
+LANGUAGE: yaml
+CODE:
+```
+input: ./slides/slide-deck.md
+output: ./public/slide-deck.html
+theme: example
+options:
+  looseYAML: false
+pdf: true
+url: https://example.com/slide-deck
+allowLocalFiles: true
+browser: firefox
+html: false
+image: png
+htmlOption:
+  minify: true
+pdfOption:
+  landscape: true
+```
+
+----------------------------------------
+
+TITLE: Defining Transition Local Directive in Markdown
+DESCRIPTION: Demonstrates how to use the transition local directive in Markdown to apply fade transition to slides. The transition directive is applied to the next slide boundary.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+---
+transition: fade
+---
+
+# First page
+
+---
+
+# Second page
+```
+
+----------------------------------------
+
+TITLE: Changing Transition Types and Scoping in Markdown
+DESCRIPTION: Shows how to change transition types mid-presentation and apply scoped transitions to individual slides using HTML comments and the _transition directive.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_1
+
+LANGUAGE: markdown
+CODE:
+```
+---
+transition: fade
+---
+
+# Fade transition
+
+---
+
+<!-- transition: cover -->
+
+Changed the kind of transition to `cover`.
+
+---
+
+<!-- _transition: none -->
+
+Disabled transition for this slide.
+
+---
+
+Got back cover transition.
+```
+
+----------------------------------------
+
+TITLE: Setting Custom Transition Duration in Markdown
+DESCRIPTION: Demonstrates how to set a custom duration for a transition by adding a space-separated parameter to the transition directive. Duration can be specified in seconds or milliseconds.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_2
+
+LANGUAGE: markdown
+CODE:
+```
+transition: fade 1s
+```
+
+----------------------------------------
+
+TITLE: Allowing Local File Access in Marp CLI Conversion
+DESCRIPTION: This command allows the use of local files during PDF conversion, which is blocked by default for security reasons. It should only be used with trusted Markdown files due to potential security risks.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_19
+
+LANGUAGE: bash
+CODE:
+```
+marp --pdf --allow-local-files slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Using Marp CLI API in Node.js
+DESCRIPTION: Example of using Marp CLI programmatically through Node.js API. Shows basic usage with error handling and exit status checking.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_41
+
+LANGUAGE: javascript
+CODE:
+```
+const { marpCli } = require('@marp-team/marp-cli')
+
+marpCli(['test.md', '--pdf'])
+  .then((exitStatus) => {
+    if (exitStatus > 0) {
+      console.error(`Failure (Exit status: ${exitStatus})`)
+    } else {
+      console.log('Success')
+    }
+  })
+  .catch(console.error)
+```
+
+----------------------------------------
+
+TITLE: Using defineConfig Helper for Marp Configuration
+DESCRIPTION: Example of using the defineConfig helper function from Marp CLI to create type-safe configuration.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_38
+
+LANGUAGE: javascript
+CODE:
+```
+import { defineConfig } from '@marp-team/marp-cli'
+
+export default defineConfig({
+  // ...
+})
+```
+
+----------------------------------------
+
+TITLE: Configuring Marp CLI with Custom Engine in JavaScript
+DESCRIPTION: Example of configuring Marp CLI with a custom Marpit-based engine using JavaScript. Shows how to provide type suggestions for options field using JSDoc annotations.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_39
+
+LANGUAGE: javascript
+CODE:
+```
+/** @type {import('@marp-team/marp-cli').Config<typeof import('@marp-team/marpit').Marpit>} */
+const config = {
+  engine: '@marp-team/marpit',
+  options: {
+    // Suggest only Marpit constructor options, not Marp Core
+  },
+}
+
+export default config
+```
+
+----------------------------------------
+
+TITLE: Displaying a Level 4 Heading in Markdown
+DESCRIPTION: A simple markdown heading level 4 that displays the word 'four'. This demonstrates basic markdown syntax for creating a subheading in a Marp presentation slide.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_files/4.txt#2025-04-16_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+#### four
+```
+
+----------------------------------------
+
+TITLE: Configuring Marp CLI with Custom Engine in TypeScript
+DESCRIPTION: TypeScript configuration example for Marp CLI using defineConfig helper with custom Marpit engine. Demonstrates type-safe configuration with generic engine specification.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_40
+
+LANGUAGE: typescript
+CODE:
+```
+// marp.config.ts
+import { Marpit } from '@marp-team/marpit'
+import { defineConfig } from '@marp-team/marp-cli'
+
+export default defineConfig<typeof Marpit>({
+  engine: Marpit,
+  options: {
+    // Suggest only Marpit constructor options
+  },
+})
+```
+
+----------------------------------------
+
+TITLE: Creating a Basic Slide with Presenter Notes in Marp Markdown
+DESCRIPTION: This snippet demonstrates the structure of a basic Marp slide with a heading and a presenter note. The '<!-- presenter note -->' syntax is used to add notes that will be visible to the presenter but not the audience during presentation mode.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_files/3.markdown#2025-04-16_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+### three
+
+<!-- presenter note -->
+```
+
+----------------------------------------
+
+TITLE: Implementing Directional Slide Transitions in CSS for Marp CLI
+DESCRIPTION: Demonstrates how to use the --marp-transition-direction CSS variable to create directional slide transitions that work for both forward and backward navigation.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_5
+
+LANGUAGE: css
+CODE:
+```
+@keyframes marp-outgoing-transition-slide-up {
+  from {
+    transform: translateY(0%);
+  }
+  to {
+    transform: translateY(calc(var(--marp-transition-direction, 1) * -100%));
+  }
+}
+@keyframes marp-incoming-transition-slide-up {
+  from {
+    transform: translateY(calc(var(--marp-transition-direction, 1) * 100%));
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Pulling Marp CLI Docker image from GitHub Container Registry
+DESCRIPTION: Command to pull the Marp CLI Docker image from GitHub Container Registry.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_6
+
+LANGUAGE: bash
+CODE:
+```
+docker pull ghcr.io/marp-team/marp-cli
+```
+
+----------------------------------------
+
+TITLE: Installing Marp CLI with Homebrew on macOS
+DESCRIPTION: Command to install Marp CLI using the Homebrew package manager on macOS.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_7
+
+LANGUAGE: bash
+CODE:
+```
+brew install marp-cli
+```
+
+----------------------------------------
+
+TITLE: Installing Marp CLI with Scoop on Windows
+DESCRIPTION: Command to install Marp CLI using the Scoop package manager on Windows.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_8
+
+LANGUAGE: cmd
+CODE:
+```
+scoop install marp
+```
+
+----------------------------------------
+
+TITLE: Installing and Using Marpit Framework
+DESCRIPTION: Commands for installing and using the pure Marpit framework as a Marp engine
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_27
+
+LANGUAGE: bash
+CODE:
+```
+# Install Marpit framework
+npm i @marp-team/marpit
+
+# Specify engine to use Marpit
+marp --engine @marp-team/marpit marpit-deck.md
+```
+
+----------------------------------------
+
+TITLE: Implementing Custom Engine with ES Modules
+DESCRIPTION: Example of creating a custom engine using ES Modules that extends MarpitBasedEngine
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_28
+
+LANGUAGE: javascript
+CODE:
+```
+// engine.mjs (ES modules)
+import { MarpitBasedEngine } from 'marpit-based-engine'
+
+export default () => MarpitBasedEngine // Return a class inherited from Marpit
+```
+
+----------------------------------------
+
+TITLE: Implementing Custom Engine with CommonJS
+DESCRIPTION: Example of creating a custom engine using CommonJS that returns a new MarpitBasedEngine instance
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_29
+
+LANGUAGE: javascript
+CODE:
+```
+// engine.cjs (CommonJS)
+const { MarpitBasedEngine } = require('marpit-based-engine')
+
+module.exports = function (constructorOptions) {
+  // Return an instance of Marpit initialized by passed constructor options
+  return new MarpitBasedEngine(constructorOptions)
+}
+```
+
+----------------------------------------
+
+TITLE: Async Custom Engine Implementation
+DESCRIPTION: Example of creating an async custom engine that dynamically imports dependencies
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_30
+
+LANGUAGE: javascript
+CODE:
+```
+export default async (constructorOptions) => {
+  const { MarpitBasedEngine } = await import('marpit-based-engine')
+  return new MarpitBasedEngine(constructorOptions)
+}
+```
+
+----------------------------------------
+
+TITLE: Using Marp Plugins in Custom Engine
+DESCRIPTION: Example of using multiple Marp plugins in a custom engine configuration
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_31
+
+LANGUAGE: javascript
+CODE:
+```
+const marpPlugin = require('marp-plugin-foo')
+const andMorePlugin = require('marp-plugin-bar')
+
+module.exports = ({ marp }) => marp.use(marpPlugin).use(andMorePlugin)
+```
+
+----------------------------------------
+
+TITLE: Markdown-it-mark Plugin Integration
+DESCRIPTION: Example of integrating markdown-it-mark plugin with installation and usage instructions
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_32
+
+LANGUAGE: javascript
+CODE:
+```
+// engine.mjs
+import markdownItMark from 'markdown-it-mark'
+
+export default ({ marp }) => marp.use(markdownItMark)
+```
+
+LANGUAGE: bash
+CODE:
+```
+# Install markdown-it-mark into your project
+npm i markdown-it-mark --save
+
+# Specify the path to functional engine
+marp --engine ./engine.mjs slide-deck.md
+```
+
+----------------------------------------
+
+TITLE: Creating Custom Backward Transitions in Marp CLI
+DESCRIPTION: Shows how to define separate animations for backward transitions using the 'backward-' prefix in keyframe names.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_6
+
+LANGUAGE: css
+CODE:
+```
+@keyframes marp-incoming-transition-triangle {
+  from {
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+  }
+  to {
+    clip-path: polygon(0% 0%, 200% 0%, 0% 200%);
+  }
+}
+
+@keyframes marp-incoming-transition-backward-triangle {
+  from {
+    clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
+  }
+  to {
+    clip-path: polygon(-100% 100%, 100% -100%, 100% 100%);
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Implementing Morphing Animations in Marp CLI Presentations
+DESCRIPTION: Demonstrates how to use the view-transition-name CSS property to create morphing animations between slide elements.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_8
+
+LANGUAGE: markdown
+CODE:
+```
+---
+theme: gaia
+transition: fade
+style: |
+  img[title~="step"] {
+    height: 64px;
+    position: relative;
+    top: -0.1em;
+    vertical-align: middle;
+    width: 64px;
+
+    &[alt="1"] {
+      view-transition-name: one;
+    }
+  }
+---
+
+# Today's topics
+
+- ![1](https://icongr.am/material/numeric-1-circle.svg?color=666666 'step') Introduction
+- ![2](https://icongr.am/material/numeric-2-circle.svg?color=666666 'step') Features
+- ![3](https://icongr.am/material/numeric-3-circle.svg?color=666666 'step') Conclusion
+
+---
+
+<!-- _class: lead -->
+
+![1 w:256 h:256](https://icongr.am/material/numeric-1-circle.svg?color=ff9900 'step')
+
+# Introduction
+
+---
+
+# ![1](https://icongr.am/material/numeric-1-circle.svg?color=666666 'step') Introduction
+
+Marp is an open-sourced Markdown presentation ecosystem.
+
+It provides a writing experience of presentation slides by Markdown.
+```
+
+----------------------------------------
+
+TITLE: Marp Configuration in Package.json
+DESCRIPTION: Example of configuring Marp settings in package.json
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_33
+
+LANGUAGE: javascript
+CODE:
+```
+// package.json
+{
+  "marp": {
+    "inputDir": "./slides",
+    "output": "./public",
+    "themeSet": "./themes"
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Marp YAML Configuration
+DESCRIPTION: Example of configuring Marp settings using YAML format in .marprc.yml
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_34
+
+LANGUAGE: yaml
+CODE:
+```
+# .marprc.yml
+allowLocalFiles: true
+options:
+  looseYAML: false
+  markdown:
+    breaks: false
+pdf: true
+```
+
+----------------------------------------
+
+TITLE: Configuring Marp Engine Constructor Options in JSON
+DESCRIPTION: Example of customizing Marp Core engine options through JSON configuration file. Shows how to disable line breaks conversion and CSS minification.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/README.md#2025-04-16_snippet_36
+
+LANGUAGE: json
+CODE:
+```
+{
+  "options": {
+    "markdown": {
+      "breaks": false
+    },
+    "minifyCSS": false
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Using HTML to Mark Morphable Contents in Marp CLI
+DESCRIPTION: Shows how to use HTML and CSS to mark specific elements as morphable for advanced transition effects.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_9
+
+LANGUAGE: markdown
+CODE:
+```
+---
+header: Bubble sort
+transition: fade
+style: |
+  [data-morph] {
+    view-transition-name: attr(data-morph type(<custom-ident>), none);
+  }
+
+  section {
+    font-size: 60px;
+  }
+---
+
+<span data-morph="bar7">███████</span> 7
+<span data-morph="bar5">█████</span> 5
+<span data-morph="bar3">███</span> 3
+<span data-morph="bar9">█████████</span> 9
+
+---
+
+<span data-morph="bar5">█████</span> 5
+<span data-morph="bar7">███████</span> 7
+<span data-morph="bar3">███</span> 3
+<span data-morph="bar9">█████████</span> 9
+
+---
+
+<span data-morph="bar5">█████</span> 5
+<span data-morph="bar3">███</span> 3
+<span data-morph="bar7">███████</span> 7
+<span data-morph="bar9">█████████</span> 9
+
+---
+
+<span data-morph="bar3">███</span> 3
+<span data-morph="bar5">█████</span> 5
+<span data-morph="bar7">███████</span> 7
+<span data-morph="bar9">█████████</span> 9
+```
+
+----------------------------------------
+
+TITLE: Disabling Transitions in Marp CLI via Command Line Option
+DESCRIPTION: Demonstrates how to disable transition support in the bespoke template using a CLI option.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/docs/bespoke-transitions/README.md#2025-04-16_snippet_10
+
+LANGUAGE: bash
+CODE:
+```
+marp --bespoke.transition=false markdown.md
+```
+
+----------------------------------------
+
+TITLE: Configuring VS Code settings for Marp CLI in virtual environment
+DESCRIPTION: JSON configuration for VS Code settings.json to specify the location of the Marp CLI executable in the virtual environment's node_modules directory.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_configs/input-dir/slides/nested/slide.md#2025-04-16_snippet_1
+
+LANGUAGE: json
+CODE:
+```
+{
+    "markdown.marp.command": "${workspaceFolder}/node_modules/.bin/marp"
+}
+```
+
+----------------------------------------
+
+TITLE: Defining Package Configuration for Marp CLI in package.json
+DESCRIPTION: The package.json file for Marp CLI that defines project metadata, dependencies, scripts, and build configuration. It includes information about the package, its entry points, dependencies, and development tools.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_configs/package-json/md.md#2025-04-16_snippet_0
+
+LANGUAGE: json
+CODE:
+```
+# package.json
+```
+
+----------------------------------------
+
+TITLE: Creating HTML Button with Bold Styling
+DESCRIPTION: Basic HTML code that creates a button element wrapped in bold tags. The code uses both the semantic <b> tag for bold text and standard button element.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_configs/basic/md.md#2025-04-16_snippet_0
+
+LANGUAGE: HTML
+CODE:
+```
+<b>html<button>button</button></b>
+```
+
+----------------------------------------
+
+TITLE: Using Marp CLI with JavaScript Configuration
+DESCRIPTION: This JavaScript code snippet shows how to configure Marp CLI programmatically, including setting up input, output, and various rendering options.
+SOURCE: https://github.com/marp-team/marp-cli/blob/main/test/_files/字/(non-ascii).md#2025-04-16_snippet_1
+
+LANGUAGE: javascript
+CODE:
+```
+module.exports = {
+  input: 'slides/deck.md',
+  output: [
+    'dist/deck.html',
+    'dist/deck.pdf'
+  ],
+  themeSet: './themes',
+  allowLocalFiles: true,
+  options: {
+    looseYAML: false,
+    markdown: {
+      breaks: false
+    }
+  },
+  bespoke: {
+    osc: true,
+    progress: false
+  }
+}
+```

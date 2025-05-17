@@ -1,0 +1,1376 @@
+TITLE: Creating a Marpit Instance in JavaScript
+DESCRIPTION: Initialize a Marpit instance to start converting Markdown into HTML/CSS presentations. This is the first step required before any other operations.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_0
+
+LANGUAGE: javascript
+CODE:
+```
+const { Marpit } = require('@marp-team/marpit')
+
+// Create Marpit instance
+const marpit = new Marpit()
+```
+
+----------------------------------------
+
+TITLE: Rendering Markdown to HTML/CSS with Marpit
+DESCRIPTION: Convert Markdown content into HTML and CSS for a slide deck using the render method. This example shows how to render a simple heading as a slide.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_5
+
+LANGUAGE: javascript
+CODE:
+```
+// Output rendered HTML, CSS, and collected HTML comments (See "Advanced")
+const { html, css, comments } = marpit.render('# Hello, Marpit!')
+```
+
+----------------------------------------
+
+TITLE: Using Marpit to Create and Render a Slide Deck
+DESCRIPTION: This code snippet demonstrates how to use Marpit to create a slide deck from Markdown, add a theme, render the content, and save it as an HTML file. It includes creating a Marpit instance, adding a theme, rendering Markdown, and writing the output to a file.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/introduction.md#2025-04-23_snippet_3
+
+LANGUAGE: javascript
+CODE:
+```
+import Marpit from '@marp-team/marpit'
+import fs from 'fs'
+
+// 1. Create instance (with options if you want)
+const marpit = new Marpit()
+
+// 2. Add theme CSS
+const theme = `
+/* @theme example */
+
+section {
+  background-color: #369;
+  color: #fff;
+  font-size: 30px;
+  padding: 40px;
+}
+
+h1,
+h2 {
+  text-align: center;
+  margin: 0;
+}
+
+h1 {
+  color: #8cf;
+}
+`
+marpit.themeSet.default = marpit.themeSet.add(theme)
+
+// 3. Render markdown
+const markdown = `
+
+# Hello, Marpit!
+
+Marpit is the skinny framework for creating slide deck from Markdown.
+
+---
+
+## Ready to convert into PDF!
+
+You can convert into PDF slide deck through Chrome.
+
+`
+const { html, css } = marpit.render(markdown)
+
+// 4. Use output in your HTML
+const htmlFile = `
+<!DOCTYPE html>
+<html><body>
+  <style>${css}</style>
+  ${html}
+</body></html>
+`
+fs.writeFileSync('example.html', htmlFile.trim())
+```
+
+----------------------------------------
+
+TITLE: Adding a Custom Theme to Marpit
+DESCRIPTION: Create and add a custom theme to Marpit by defining CSS with the required @theme meta comment. This example customizes background color, text color, and heading styles.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_7
+
+LANGUAGE: javascript
+CODE:
+```
+const theme = marpit.themeSet.add(`
+/* @theme my-first-theme */
+
+section {
+  background-color: #123;
+  color: #fff;
+  font-size: 30px;
+  padding: 40px;
+}
+
+h1 {
+  color: #8cf;
+}
+`)
+```
+
+----------------------------------------
+
+TITLE: Extending Marpit with Markdown-it Plugins
+DESCRIPTION: Enhance Marpit functionality by adding markdown-it plugins. This example shows how to integrate markdown-it-container to support multi-column blocks in slides.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_12
+
+LANGUAGE: javascript
+CODE:
+```
+const { Marpit } = require('@marp-team/marpit')
+const markdownItContainer = require('markdown-it-container')
+
+// Create the extended Marpit instance
+const marpit = new Marpit().use(markdownItContainer, 'columns')
+
+// Setting default theme for styling multi-column
+marpit.themeSet.default = marpit.themeSet.add(`
+/* @theme custom-container */
+section { padding: 50px; }
+.columns { column-count: 2; }
+`)
+
+// Render HTML and CSS from Markdown that includes custom container
+const { html, css } = marpit.render(`
+::: columns
+Lorem ipsum dolor sit amet consectetur, adipisicing elit. Perspiciatis
+perferendis, dolorem amet adipisci quas rem iusto excepturi ipsam aperiam quo
+expedita totam a laborum ut voluptatibus voluptate fugit voluptatem eum?
+:::
+`)
+```
+
+----------------------------------------
+
+TITLE: Customizing Container Elements in Marpit
+DESCRIPTION: Specify custom HTML container elements for slides and their content. This helps with CSS scoping and structuring the output HTML for presentations.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_2
+
+LANGUAGE: javascript
+CODE:
+```
+const { Marpit, Element } = require('@marp-team/marpit')
+
+const marpit = new Marpit({
+  container: [
+    new Element('article', { id: 'presentation' }),
+    new Element('div', { class: 'slides' }),
+  ],
+  slideContainer: new Element('div', { class: 'slide' }),
+})
+```
+
+----------------------------------------
+
+TITLE: Tweaking Theme Style with Global Directives in Marpit
+DESCRIPTION: Shows how to customize theme styles using the style global directive instead of HTML style elements.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_5
+
+LANGUAGE: markdown
+CODE:
+```
+---
+theme: base-theme
+style: |
+  section {
+    background-color: #ccc;
+  }
+---
+```
+
+----------------------------------------
+
+TITLE: Using :root Pseudo-class in Marpit Themes
+DESCRIPTION: Demonstrates how to use the :root pseudo-class selector in Marpit themes, which targets each slide's section element, with rem units for relative sizing.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_2
+
+LANGUAGE: css
+CODE:
+```
+/* @theme marpit-theme */
+
+:root {
+  width: 1280px;
+  height: 960px;
+  font-size: 40px;
+  padding: 1rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  color: #09c;
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+```
+
+----------------------------------------
+
+TITLE: Configuring Markdown-it Parser Options in Marpit
+DESCRIPTION: Customize the behavior of the underlying Markdown parser by passing options to the markdown-it initializer. This example enables HTML tags and automatic line breaks.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_1
+
+LANGUAGE: javascript
+CODE:
+```
+const marpit = new Marpit({
+  markdown: {
+    html: true, // Enable HTML tags
+    breaks: true, // Convert line breaks into `<br />`
+  },
+})
+```
+
+----------------------------------------
+
+TITLE: Using @import-theme with Sass in Marpit
+DESCRIPTION: Demonstrates how to use the @import-theme rule with Sass preprocessor to import a base theme while using Sass variables for styling.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_10
+
+LANGUAGE: scss
+CODE:
+```
+$bg-color: #f80;
+$text-color: #fff;
+
+@import-theme 'base';
+
+section {
+  background: $bg-color;
+  color: $text-color;
+}
+```
+
+----------------------------------------
+
+TITLE: Creating a Marpit Plugin in JavaScript
+DESCRIPTION: This snippet demonstrates how to create a Marpit plugin using the marpitPlugin helper function. It provides access to the Marpit instance and allows for adding custom directives or themes.
+SOURCE: https://github.com/marp-team/marpit/blob/main/api.md#2025-04-23_snippet_2
+
+LANGUAGE: javascript
+CODE:
+```
+import { marpitPlugin } from '@marp-team/marpit/plugin'
+
+export default marpitPlugin(({ marpit }) => {
+  // Add your plugin code here (Add theme, define custom directives, etc...)
+  /*
+  marpit.customDirectives.local.yourDirective = (value) => {
+    return { yourDirective: value }
+  }
+  */
+```
+
+----------------------------------------
+
+TITLE: Local Directives for Background Color Setting in Marpit
+DESCRIPTION: Demonstrates local directives that apply a background color setting to the current slide and all following slides.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_2
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- backgroundColor: aqua -->
+
+This page has aqua background.
+
+---
+
+The second page also has same color.
+```
+
+----------------------------------------
+
+TITLE: Setting Header and Footer in Marpit Slides
+DESCRIPTION: Shows how to add consistent header and footer content across multiple slides using directives.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_13
+
+LANGUAGE: markdown
+CODE:
+```
+---
+header: 'Header content'
+footer: 'Footer content'
+---
+
+# Page 1
+
+---
+
+## Page 2
+```
+
+----------------------------------------
+
+TITLE: Enabling Inline SVG Slides in Marpit
+DESCRIPTION: Turn on the experimental inline SVG slide feature. This allows slides to be rendered as SVG elements for better scaling and compatibility.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_4
+
+LANGUAGE: javascript
+CODE:
+```
+const marpit = new Marpit({
+  inlineSVG: true,
+})
+```
+
+----------------------------------------
+
+TITLE: Resizing Images Using Width and Height in Markdown
+DESCRIPTION: Examples of resizing images using width and height keyword options in Marpit Markdown. Options include setting specific dimensions using various CSS length units.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+![width:200px](image.jpg) <!-- Setting width to 200px -->
+![height:30cm](image.jpg) <!-- Setting height to 300px -->
+![width:200px height:30cm](image.jpg) <!-- Setting both lengths -->
+```
+
+----------------------------------------
+
+TITLE: Creating Basic Slides with Horizontal Rulers in Marpit Markdown
+DESCRIPTION: This example demonstrates how to create a simple two-slide deck in Marpit by using horizontal rulers (---) to separate different slides. Each slide has a heading and content.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/markdown.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+# Slide 1
+
+foo
+
+---
+
+# Slide 2
+
+bar
+```
+
+----------------------------------------
+
+TITLE: Setting Background Size in Markdown
+DESCRIPTION: Example of specifying the size of a background image using keywords that follow CSS background-size style in Marpit Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_4
+
+LANGUAGE: markdown
+CODE:
+```
+![bg contain](https://example.com/background.jpg)
+```
+
+----------------------------------------
+
+TITLE: Rendering HTML as Array in Marpit
+DESCRIPTION: Render Markdown into an array of HTML strings, one for each slide, by using the htmlAsArray option. Useful for processing slides individually.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_9
+
+LANGUAGE: javascript
+CODE:
+```
+const markdown = `
+# Page 1
+
+---
+
+# Page 2
+`
+
+const { html } = marpit.render(markdown, { htmlAsArray: true })
+/*
+[ '<section id="1">\n<h1>Page 1</h1>\n</section>\n',
+  '<section id="2">\n<h1>Page 2</h1>\n</section>\n' ]
+*/
+```
+
+----------------------------------------
+
+TITLE: Styling Pagination in Marpit
+DESCRIPTION: Shows how to customize the appearance of page numbers by styling the section::after pseudo-element that displays pagination.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_5
+
+LANGUAGE: css
+CODE:
+```
+/* Styling page number */
+section::after {
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #fff;
+}
+```
+
+----------------------------------------
+
+TITLE: Setting a Default Theme in Marpit
+DESCRIPTION: Specify a default theme for Marpit to use when no theme directive is provided in the Markdown. This makes the theme available without explicit selection.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_8
+
+LANGUAGE: javascript
+CODE:
+```
+marpit.themeSet.default = marpit.themeSet.add('...')
+```
+
+----------------------------------------
+
+TITLE: Skipping Pagination on Title Slide in Marpit
+DESCRIPTION: Demonstrates how to exclude the title slide from pagination by setting the paginate directive on the second slide.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_9
+
+LANGUAGE: markdown
+CODE:
+```
+# Title slide
+
+This page will not have pagination by lack of the `paginate` directive.
+
+---
+
+<!-- paginate: true -->
+
+Pagination will render from this slide onwards (starting at 2).
+```
+
+----------------------------------------
+
+TITLE: Using HTML Comments for Directives in Marpit Markdown
+DESCRIPTION: Demonstrates how to use HTML comments to specify directives in Marpit Markdown, setting theme and enabling pagination.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+<!--
+theme: default
+paginate: true
+-->
+```
+
+----------------------------------------
+
+TITLE: Using Paginate Hold in Marpit Markdown
+DESCRIPTION: Shows how to exclude a page from pagination count while keeping the pagination display visible.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_12
+
+LANGUAGE: markdown
+CODE:
+```
+---
+paginate: true
+---
+
+# Slide 1
+
+[](./assets/image_01.png)
+
+> Page 1 of 1
+
+---
+
+<!-- _paginate: hold -->
+
+# Slide 2
+
+[](./assets/image_02.png)
+
+> Page 1 of 1
+```
+
+----------------------------------------
+
+TITLE: Using YAML Front-matter for Directives in Marpit Markdown
+DESCRIPTION: Shows how to use YAML front-matter syntax to specify directives at the beginning of a Marpit Markdown document.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_1
+
+LANGUAGE: markdown
+CODE:
+```
+---
+theme: default
+paginate: true
+---
+```
+
+----------------------------------------
+
+TITLE: Implementing Custom Global Theme Directive
+DESCRIPTION: Shows how to create a custom global directive that adds a dollar-prefixed alias for the built-in theme directive.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_19
+
+LANGUAGE: javascript
+CODE:
+```
+marpit.customDirectives.global.$theme = (value, marpit) => {
+  return { theme: value }
+}
+```
+
+----------------------------------------
+
+TITLE: Using Spot Directive for Pagination Control in Marpit
+DESCRIPTION: Shows an alternative way to control pagination on specific slides using spot directives.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_10
+
+LANGUAGE: markdown
+CODE:
+```
+---
+paginate: true
+_paginate: false # or use `_paginate: skip`
+---
+```
+
+----------------------------------------
+
+TITLE: Creating Custom Color Preset Directive
+DESCRIPTION: Demonstrates implementing a custom local directive that defines color presets for slides.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_20
+
+LANGUAGE: javascript
+CODE:
+```
+marpit.customDirectives.local.colorPreset = (value, marpit) => {
+  switch (value) {
+    case 'sunset':
+      return { backgroundColor: '#e62e00', color: '#fffff2' }
+    case 'dark':
+      return { backgroundColor: '#303033', color: '#f8f8ff' }
+    default:
+      // Return an empty object if not have to assign new values
+      return {}
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Setting 4:3 Slide Size in Marpit
+DESCRIPTION: CSS snippet for changing the default 16:9 slide size to a classic 4:3 format by modifying the section dimensions.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_4
+
+LANGUAGE: css
+CODE:
+```
+/* Change to the classic 4:3 slide */
+section {
+  width: 960px;
+  height: 720px;
+}
+```
+
+----------------------------------------
+
+TITLE: Installing and Building Marpit Framework
+DESCRIPTION: Commands for cloning the Marpit repository from GitHub and setting up the development environment. Includes installation of dependencies and building the project.
+SOURCE: https://github.com/marp-team/marpit/blob/main/README.md#2025-04-23_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+git clone https://github.com/marp-team/marpit
+cd marpit
+
+npm install
+npm run build
+```
+
+----------------------------------------
+
+TITLE: Defining Slide Background in Markdown
+DESCRIPTION: Example of setting a slide background image using the 'bg' keyword in the alternate text of an image in Marpit Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_3
+
+LANGUAGE: markdown
+CODE:
+```
+![bg](https://example.com/background.jpg)
+```
+
+----------------------------------------
+
+TITLE: Collecting Presenter Notes from Comments in Marpit
+DESCRIPTION: Extract HTML comments from Markdown as presenter notes. Comments are collected per slide and returned in the render result as a two-dimensional array.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_10
+
+LANGUAGE: javascript
+CODE:
+```
+const { comments } = marpit.render(`
+<!-- theme: default -->
+
+# First page
+
+<!-- HTML comment recognizes as a presenter note per pages. -->
+<!-- You may place multiple comments in a single page. -->
+
+---
+
+## Second page
+
+<!--
+Also supports multiline.
+We bet these comments would help your presentation...
+-->
+`)
+```
+
+----------------------------------------
+
+TITLE: Creating Multiple Backgrounds in Markdown
+DESCRIPTION: Example of defining multiple background images that will be arranged in a horizontal row in Marpit Markdown when inline SVG slide mode is enabled.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_5
+
+LANGUAGE: markdown
+CODE:
+```
+![bg](https://fakeimg.pl/800x600/0288d1/fff/?text=A)
+![bg](https://fakeimg.pl/800x600/02669d/fff/?text=B)
+![bg](https://fakeimg.pl/800x600/67b8e3/fff/?text=C)
+```
+
+----------------------------------------
+
+TITLE: Defining Theme Metadata in CSS
+DESCRIPTION: Shows how to define the required @theme metadata in a CSS comment, which is mandatory for all Marpit themes.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_3
+
+LANGUAGE: css
+CODE:
+```
+/* @theme name */
+```
+
+----------------------------------------
+
+TITLE: Creating Vertical Multiple Backgrounds in Markdown
+DESCRIPTION: Example of defining multiple background images with vertical alignment using the 'vertical' direction keyword in Marpit Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_6
+
+LANGUAGE: markdown
+CODE:
+```
+![bg vertical](https://fakeimg.pl/800x600/0288d1/fff/?text=A)
+![bg](https://fakeimg.pl/800x600/02669d/fff/?text=B)
+![bg](https://fakeimg.pl/800x600/67b8e3/fff/?text=C)
+```
+
+----------------------------------------
+
+TITLE: Using Shorthand Width and Height Options in Markdown
+DESCRIPTION: Example of using shorthand width (w) and height (h) options to resize images in Marpit Markdown, which is useful for concise dimension specification.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_1
+
+LANGUAGE: markdown
+CODE:
+```
+![w:32 h:32](image.jpg) <!-- Setting size to 32x32 px -->
+```
+
+----------------------------------------
+
+TITLE: Creating Ordered Lists with Fragmentation in Marpit Markdown
+DESCRIPTION: Shows how to create regular ordered lists with '.' and fragmented ordered lists with ')' markers. The fragmented version enables sequential appearance of items.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/fragmented-list.md#2025-04-23_snippet_1
+
+LANGUAGE: markdown
+CODE:
+```
+# Ordered list
+
+1. One
+2. Two
+3. Three
+
+---
+
+# Fragmented list
+
+1) One
+2) Two
+3) Three
+```
+
+----------------------------------------
+
+TITLE: Creating a Basic Marpit Theme with CSS
+DESCRIPTION: Shows how to create a theme CSS file for Marpit by defining styles for section elements and headings, with the required @theme metadata.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_1
+
+LANGUAGE: css
+CODE:
+```
+/* @theme marpit-theme */
+
+section {
+  width: 1280px;
+  height: 960px;
+  font-size: 40px;
+  padding: 40px;
+}
+
+h1 {
+  font-size: 60px;
+  color: #09c;
+}
+
+h2 {
+  font-size: 50px;
+}
+```
+
+----------------------------------------
+
+TITLE: Using Custom Color Presets in Markdown
+DESCRIPTION: Shows how to use the custom color preset directive in Markdown slides.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_21
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- colorPreset: sunset -->
+
+# Sunset color preset
+
+---
+
+<!-- _colorPreset: dark -->
+
+# Dark color preset
+
+---
+
+# Sunset color preset
+```
+
+----------------------------------------
+
+TITLE: Customizing a Theme with @import in Marpit
+DESCRIPTION: Shows how to create a customized theme by importing a base theme and overriding specific styles using the CSS @import rule.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_9
+
+LANGUAGE: css
+CODE:
+```
+/* @theme customized */
+
+@import 'base';
+
+section {
+  background-color: #f80;
+  color: #fff;
+}
+```
+
+----------------------------------------
+
+TITLE: Configuring CSS for Viewport Scaling
+DESCRIPTION: CSS configuration to enable pixel-perfect scaling of slide pages to viewport dimensions
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/inline-svg.md#2025-04-23_snippet_1
+
+LANGUAGE: css
+CODE:
+```
+/* Fit slide page to viewport */
+svg[data-marpit-svg] {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+```
+
+----------------------------------------
+
+TITLE: Setting Theme in Marpit Markdown
+DESCRIPTION: Demonstrates how to specify a theme for the slide deck using the theme global directive.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_4
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- theme: registered-theme-name -->
+```
+
+----------------------------------------
+
+TITLE: Regular Slide Syntax Comparison for Heading Divider in Marpit
+DESCRIPTION: Shows the regular syntax for creating multiple slides using explicit slide separators.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_6
+
+LANGUAGE: markdown
+CODE:
+```
+# 1st page
+
+The content of 1st page
+
+---
+
+## 2nd page
+
+### The content of 2nd page
+
+Hello, world!
+
+---
+
+# 3rd page
+
+😃
+```
+
+----------------------------------------
+
+TITLE: Importing Marpit Class in JavaScript
+DESCRIPTION: This snippet demonstrates how to import the Marpit class using default export in JavaScript.
+SOURCE: https://github.com/marp-team/marpit/blob/main/api.md#2025-04-23_snippet_0
+
+LANGUAGE: javascript
+CODE:
+```
+import Marpit from '@marp-team/marpit'
+```
+
+----------------------------------------
+
+TITLE: HTML Structure Generated by Header and Footer Directives
+DESCRIPTION: Illustrates the HTML structure that is generated when header and footer directives are used in Marpit.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_14
+
+LANGUAGE: html
+CODE:
+```
+<section>
+  <header>Header content</header>
+  <h1>Page 1</h1>
+  <footer>Footer content</footer>
+</section>
+<section>
+  <header>Header content</header>
+  <h2>Page 2</h2>
+  <footer>Footer content</footer>
+</section>
+```
+
+----------------------------------------
+
+TITLE: Importing Multiple Marpit Classes in JavaScript
+DESCRIPTION: This snippet shows how to import multiple Marpit classes using named exports in JavaScript, which is recommended for TypeScript users.
+SOURCE: https://github.com/marp-team/marpit/blob/main/api.md#2025-04-23_snippet_1
+
+LANGUAGE: javascript
+CODE:
+```
+import { Element, Marpit, Theme, ThemeSet } from '@marp-team/marpit'
+```
+
+----------------------------------------
+
+TITLE: Disabling CSS Transitions in Print Style for Marpit
+DESCRIPTION: Disables CSS transitions and animations in the print style to improve print output.
+SOURCE: https://github.com/marp-team/marpit/blob/main/CHANGELOG.md#2025-04-23_snippet_3
+
+LANGUAGE: markdown
+CODE:
+```
+### Fixed
+
+- Disable CSS transitions and animations in the style for print ([#238](https://github.com/marp-team/marpit/issues/238), [#239](https://github.com/marp-team/marpit/pull/239))
+```
+
+----------------------------------------
+
+TITLE: Using Heading Divider in Marpit Markdown
+DESCRIPTION: Demonstrates how to use the headingDivider directive to automatically create new slides at headings.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_7
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- headingDivider: 2 -->
+
+# 1st page
+
+The content of 1st page
+
+## 2nd page
+
+### The content of 2nd page
+
+Hello, world!
+
+# 3rd page
+
+😃
+```
+
+----------------------------------------
+
+TITLE: Adding Scoped Keyframe Support in Marpit
+DESCRIPTION: Adds support for scoped keyframe names in <style scoped> elements.
+SOURCE: https://github.com/marp-team/marpit/blob/main/CHANGELOG.md#2025-04-23_snippet_2
+
+LANGUAGE: markdown
+CODE:
+```
+### Added
+
+- Make scoped keyframe names if defined `@keyframes` in `<style scoped>` ([#231](https://github.com/marp-team/marpit/issues/231), [#237](https://github.com/marp-team/marpit/pull/237))
+- Correct support of `:root` pseudo-class selector and `rem` unit for theme CSS ([#232](https://github.com/marp-team/marpit/issues/232), [#240](https://github.com/marp-team/marpit/pull/240))
+```
+
+----------------------------------------
+
+TITLE: Creating Bullet Lists with Fragmentation in Marpit Markdown
+DESCRIPTION: Demonstrates the difference between regular bullet lists using '-' and fragmented lists using '*' markers. The fragmented list will allow items to appear sequentially in presentations.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/fragmented-list.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+# Bullet list
+
+- One
+- Two
+- Three
+
+---
+
+# Fragmented list
+
+* One
+* Two
+* Three
+```
+
+----------------------------------------
+
+TITLE: Upgrading Node and Packages in Marpit
+DESCRIPTION: Upgrades Node.js and dependent packages to the latest versions.
+SOURCE: https://github.com/marp-team/marpit/blob/main/CHANGELOG.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+### Changed
+
+- Upgrade Node and dependent packages to the latest version ([#255](https://github.com/marp-team/marpit/pull/255), [#266](https://github.com/marp-team/marpit/pull/266))
+```
+
+----------------------------------------
+
+TITLE: Installing Marpit using npm
+DESCRIPTION: Command to install Marpit using the npm package manager.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/introduction.md#2025-04-23_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+npm install @marp-team/marpit
+```
+
+----------------------------------------
+
+TITLE: Creating Marpit Documentation Navigation Structure with Markdown and HTML
+DESCRIPTION: This code snippet defines the navigation menu structure for Marpit documentation using a combination of Markdown links and HTML elements. It includes internal navigation links and external links with icons to resources like API documentation, GitHub repository, and npm package.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/_sidebar.md#2025-04-23_snippet_0
+
+LANGUAGE: markdown
+CODE:
+```
+- [Introduction](/)
+- [Usage](/usage)
+- <br>[Marpit Markdown](/markdown)
+  - [Directives](/directives)
+  - [Image syntax](/image-syntax)
+  - [Fragmented list](/fragmented-list)
+- [Theme CSS](/theme-css)
+- [Inline SVG slide](/inline-svg)
+
+---
+
+<!-- Require section-link class to dismiss external links in pagination. They will throw error when tried to navigate from pagination. -->
+
+- <a class="section-link" href="https://marpit-api.marp.app/" target="_blank" rel="noopener">![Marpit API](https://icongr.am/material/open-in-new.svg?size=24&color=808080)Marpit API (JSDoc)</a>
+- <a class="section-link" href="https://github.com/marp-team/marpit" target="_blank" rel="noopener">![GitHub](https://icongr.am/material/github.svg?size=24&color=808080)GitHub</a>
+- <a class="section-link" href="https://www.npmjs.com/package/@marp-team/marpit" target="_blank" rel="noopener">![npm](https://icongr.am/material/npm.svg?size=24&color=808080)npm ![](https://img.shields.io/npm/v/@marp-team/marpit.svg?style=flat-square&label=&colorB=888)</a>
+```
+
+----------------------------------------
+
+TITLE: Installing Marpit using yarn
+DESCRIPTION: Command to install Marpit using the yarn package manager.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/introduction.md#2025-04-23_snippet_1
+
+LANGUAGE: bash
+CODE:
+```
+yarn add @marp-team/marpit
+```
+
+----------------------------------------
+
+TITLE: Using Marp CLI with Marpit Engine
+DESCRIPTION: Command line instructions for generating HTML presentations using Marp CLI with Marpit engine
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/inline-svg.md#2025-04-23_snippet_2
+
+LANGUAGE: bash
+CODE:
+```
+npm i -g @marp-team/marp-cli
+npm i @marp-team/marpit
+
+marp --template bare --engine @marp-team/marpit marpit-deck.md
+```
+
+----------------------------------------
+
+TITLE: Enabling Pagination in Marpit Slides
+DESCRIPTION: Shows how to enable pagination display on slides using the paginate local directive.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_8
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- paginate: true -->
+
+You would be able to see a page number of slide in the lower right.
+```
+
+----------------------------------------
+
+TITLE: Installing Marpit using pnpm
+DESCRIPTION: Command to install Marpit using the pnpm package manager.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/introduction.md#2025-04-23_snippet_2
+
+LANGUAGE: bash
+CODE:
+```
+pnpm add @marp-team/marpit
+```
+
+----------------------------------------
+
+TITLE: Spot Directives for Single-Page Settings in Marpit
+DESCRIPTION: Shows how to use the underscore prefix to make a directive apply only to the current slide (spot directive).
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_3
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- _backgroundColor: aqua -->
+
+Add underscore prefix `_` to the name of local directives.
+
+---
+
+The second page would not apply setting of directives.
+```
+
+----------------------------------------
+
+TITLE: Basic Rendered HTML Output from Marpit
+DESCRIPTION: Example of the HTML structure generated by Marpit when rendering a simple Markdown heading. Shows the default container element and section format.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_6
+
+LANGUAGE: html
+CODE:
+```
+<div class="marpit">
+  <section id="1"><h1>Hello, Marpit!</h1></section>
+</div>
+```
+
+----------------------------------------
+
+TITLE: Rendered HTML Structure with Custom Containers
+DESCRIPTION: Example of the HTML structure generated when using custom container elements. Shows how slide content is nested within the specified container hierarchy.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/usage.md#2025-04-23_snippet_3
+
+LANGUAGE: html
+CODE:
+```
+<!-- Container elements -->
+<article id="presentation">
+  <div class="slides">
+    <!-- Slide container elements -->
+    <div class="slide"><section>Page 1</section></div>
+    <div class="slide"><section>Page 2</section></div>
+  </div>
+</article>
+```
+
+----------------------------------------
+
+TITLE: Applying Image Filters with Multiple Parameters
+DESCRIPTION: Example of applying multiple CSS filters to an image in Marpit Markdown by adding filter names and parameters to the image's alternate text.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_2
+
+LANGUAGE: markdown
+CODE:
+```
+![brightness:.8 sepia:50%](https://example.com/image.jpg)
+```
+
+----------------------------------------
+
+TITLE: Customizing Pagination Content in Marpit
+DESCRIPTION: Demonstrates how to customize the content of the pagination display by adding prefix text and total page count to the current page number.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_6
+
+LANGUAGE: css
+CODE:
+```
+/* Add "Page" prefix and total page number */
+section::after {
+  content: 'Page ' attr(data-marpit-pagination) ' / ' attr(data-marpit-pagination-total);
+}
+```
+
+----------------------------------------
+
+TITLE: Implementing Basic Inline SVG Slide Structure in HTML
+DESCRIPTION: Shows the basic HTML structure for inline SVG slides with foreignObject elements containing section content
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/inline-svg.md#2025-04-23_snippet_0
+
+LANGUAGE: html
+CODE:
+```
+<svg data-marpit-svg viewBox="0 0 1280 960">
+  <foreignObject width="1280" height="960">
+    <section><h1>Page 1</h1></section>
+  </foreignObject>
+</svg>
+<svg data-marpit-svg viewBox="0 0 1280 960">
+  <foreignObject width="1280" height="960">
+    <section><h1>Page 2</h1></section>
+  </foreignObject>
+</svg>
+```
+
+----------------------------------------
+
+TITLE: Styling Header and Footer in Marpit
+DESCRIPTION: CSS for positioning header and footer elements at the margins of slides using absolute positioning to create consistent layout across slides.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_7
+
+LANGUAGE: css
+CODE:
+```
+section {
+  padding: 50px;
+}
+
+header,
+footer {
+  position: absolute;
+  left: 50px;
+  right: 50px;
+  height: 20px;
+}
+
+header {
+  top: 30px;
+}
+
+footer {
+  bottom: 30px;
+}
+```
+
+----------------------------------------
+
+TITLE: Tweaking Styles with Inline Style in Markdown
+DESCRIPTION: Shows how to override theme styles directly in Markdown by using inline <style> elements, which are treated specially by Marpit and merged into the theme.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_11
+
+LANGUAGE: markdown
+CODE:
+```
+---
+theme: base
+---
+
+<style>
+section {
+  background: yellow;
+}
+</style>
+
+# Tweak style through Markdown
+
+You would see a yellow slide.
+```
+
+----------------------------------------
+
+TITLE: Using Scoped Styles in Marpit Markdown
+DESCRIPTION: Demonstrates how to apply styles to specific slides only by using <style scoped> elements, which limit style application to the current slide page.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_12
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- Global style -->
+<style>
+h1 {
+  color: red;
+}
+</style>
+
+# Red text
+
+---
+
+<!-- Scoped style -->
+<style scoped>
+h1 {
+  color: blue;
+}
+</style>
+
+# Blue text (only in the current slide page)
+
+---
+
+# Red text
+```
+
+----------------------------------------
+
+TITLE: Creating Split Background Layout in Markdown
+DESCRIPTION: Example of creating a split background layout where the image takes the left half and content shrinks to the right side in Marpit Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_7
+
+LANGUAGE: markdown
+CODE:
+```
+![bg left](https://picsum.photos/720?image=29)
+
+# Split backgrounds
+
+The space of a slide content will shrink to the right side.
+```
+
+----------------------------------------
+
+TITLE: Combining Split and Multiple Backgrounds in Markdown
+DESCRIPTION: Example of combining split and multiple background images where content shrinks to the left side while multiple images appear on the right in Marpit Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/image-syntax.md#2025-04-23_snippet_8
+
+LANGUAGE: markdown
+CODE:
+```
+![bg right](https://picsum.photos/720?image=3)
+![bg](https://picsum.photos/720?image=20)
+
+# Split + Multiple BGs
+
+The space of a slide content will shrink to the left side.
+```
+
+----------------------------------------
+
+TITLE: Formatting Header and Footer Content in Marpit
+DESCRIPTION: Shows how to format header and footer content using Markdown syntax including bold, italic, and images.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_15
+
+LANGUAGE: markdown
+CODE:
+```
+---
+header: '**bold** _italic_'
+footer: '![image](https://example.com/image.jpg)'
+---
+
+NOTE: Wrap by (double-)quotes to avoid parsed as invalid YAML.
+```
+
+----------------------------------------
+
+TITLE: Using Class Directive for Slide Styling in Marpit
+DESCRIPTION: Demonstrates how to apply a CSS class to a slide using the class directive to control its layout and styling.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_16
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- _class: lead -->
+
+# THE LEADING HEADER
+```
+
+----------------------------------------
+
+TITLE: Setting Background Styles in Markdown
+DESCRIPTION: Demonstrates how to set gradient backgrounds and color combinations using Marpit's background directives in Markdown.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/directives.md#2025-04-23_snippet_18
+
+LANGUAGE: markdown
+CODE:
+```
+<!-- backgroundImage: "linear-gradient(to bottom, #67b8e3, #0288d1)" -->
+
+Gradient background
+
+---
+
+<!--
+_backgroundColor: black
+_color: white
+-->
+
+Black background + White text
+```
+
+----------------------------------------
+
+TITLE: Rendered HTML Output for Fragmented Lists in Marpit
+DESCRIPTION: Shows the HTML structure generated for both regular and fragmented lists, including data-marpit-fragment attributes for numbered fragments and data-marpit-fragments for section count.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/fragmented-list.md#2025-04-23_snippet_2
+
+LANGUAGE: html
+CODE:
+```
+<section id="1">
+  <h1>Bullet list</h1>
+  <ul>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+  </ul>
+</section>
+<section id="2" data-marpit-fragments="3">
+  <h1>Fragmented list</h1>
+  <ul>
+    <li data-marpit-fragment="1">One</li>
+    <li data-marpit-fragment="2">Two</li>
+    <li data-marpit-fragment="3">Three</li>
+  </ul>
+</section>
+```
+
+----------------------------------------
+
+TITLE: Creating a Base Theme in Marpit
+DESCRIPTION: A simple base theme CSS that defines basic colors for slides which can be imported and extended by other themes.
+SOURCE: https://github.com/marp-team/marpit/blob/main/docs/theme-css.md#2025-04-23_snippet_8
+
+LANGUAGE: css
+CODE:
+```
+/* @theme base */
+
+section {
+  background-color: #fff;
+  color: #333;
+}
+```
