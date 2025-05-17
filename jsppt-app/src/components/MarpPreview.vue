@@ -9,31 +9,41 @@
         <div class="preview-controls">
           <div class="theme-selector">
             <label for="theme-select">主题：</label>
-            <select id="theme-select" v-model="selectedTheme" @change="changeTheme">
+            <select id="theme-select" v-model="selectedTheme" @change="changeTheme" class="theme-select">
               <option v-for="theme in availableThemes" :key="theme.id" :value="theme.id">
                 {{ theme.name }}
               </option>
             </select>
           </div>
           <div class="export-buttons">
-            <button class="btn btn-sm" @click="exportPDF">导出PDF</button>
-            <button class="btn btn-sm" @click="exportPPTX">导出PPTX</button>
+            <button class="btn btn-primary" @click="exportPDF" title="导出为PDF">
+              <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn btn-success" @click="exportPPTX" title="导出为PPTX">
+              <i class="fas fa-file-powerpoint"></i> PPTX
+            </button>
           </div>
           <button class="close-btn" @click="$emit('close')">×</button>
         </div>
       </div>
       <div class="preview-content">
-        <div class="loading-indicator" v-if="isLoading">
-          <div class="spinner"></div>
-          <p>正在渲染...</p>
-        </div>
-        <div v-else class="marp-preview" ref="previewContainer" v-html="renderedHTML"></div>
+        <transition name="fade">
+          <div class="loading-indicator" v-if="isLoading">
+            <div class="spinner"></div>
+            <p>正在渲染...</p>
+          </div>
+          <div v-else class="marp-preview" v-html="renderedHTML"></div>
+        </transition>
       </div>
       <div class="preview-footer">
         <div class="navigation-controls">
-          <button class="nav-btn" @click="prevSlide" :disabled="currentSlide <= 0">上一页</button>
+          <button class="nav-btn prev-btn" @click="prevSlide" :disabled="currentSlide <= 0">
+            <i class="fas fa-chevron-left"></i> 上一页
+          </button>
           <span class="slide-indicator">{{ currentSlide + 1 }} / {{ slideCount }}</span>
-          <button class="nav-btn" @click="nextSlide" :disabled="currentSlide >= slideCount - 1">下一页</button>
+          <button class="nav-btn next-btn" @click="nextSlide" :disabled="currentSlide >= slideCount - 1">
+            下一页 <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -311,6 +321,8 @@ export default {
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
 }
 
 .preview-container {
@@ -323,6 +335,18 @@ export default {
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  animation: slide-up 0.4s ease;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .preview-header {
@@ -385,31 +409,45 @@ export default {
 }
 
 .btn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-sm {
   font-size: 0.85rem;
-  padding: 5px 10px;
+  padding: 6px 12px;
 }
 
 .btn:hover {
-  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn:first-child {
+.btn-primary {
   background-color: #4361ee;
   color: white;
 }
 
-.btn:last-child {
-  background-color: #3a0ca3;
+.btn-primary:hover {
+  background-color: #3a56d4;
+  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
+}
+
+.btn-success {
+  background-color: #10b981;
   color: white;
+}
+
+.btn-success:hover {
+  background-color: #0ea271;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
 }
 
 .close-btn {
@@ -469,8 +507,186 @@ export default {
   height: 100%;
   overflow-y: auto;
   display: block;
+  background-color: #f5f5f5;
+  padding: 20px 0;
 }
 
+/* 增强Marp渲染的样式 */
+:deep(.marp-preview section) {
+  background-color: white;
+  margin: 0 auto 30px;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 1000px;
+  aspect-ratio: 16 / 9;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+:deep(.marp-preview section:hover) {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 幻灯片内容样式增强 */
+:deep(.marp-preview section h1) {
+  font-size: 2.8rem;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+:deep(.marp-preview section h2) {
+  font-size: 2.2rem;
+  margin-bottom: 1.2rem;
+  color: #3498db;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+:deep(.marp-preview section h3) {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #2980b9;
+  font-weight: 600;
+}
+
+:deep(.marp-preview section p) {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: #34495e;
+}
+
+:deep(.marp-preview section ul),
+:deep(.marp-preview section ol) {
+  margin-left: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+:deep(.marp-preview section li) {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+  color: #34495e;
+}
+
+:deep(.marp-preview section img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.marp-preview section a) {
+  color: #3498db;
+  text-decoration: none;
+  border-bottom: 1px dotted #3498db;
+  transition: color 0.2s ease, border-bottom 0.2s ease;
+}
+
+:deep(.marp-preview section a:hover) {
+  color: #2980b9;
+  border-bottom: 1px solid #2980b9;
+}
+
+:deep(.marp-preview section blockquote) {
+  border-left: 4px solid #3498db;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+  margin: 1.5rem 0;
+  color: #7f8c8d;
+  font-style: italic;
+  background-color: rgba(52, 152, 219, 0.05);
+  border-radius: 0 8px 8px 0;
+}
+
+:deep(.marp-preview section code) {
+  font-family: 'Fira Code', monospace;
+  background-color: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #e74c3c;
+}
+
+:deep(.marp-preview section pre) {
+  background-color: #2c3e50;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+:deep(.marp-preview section pre code) {
+  background-color: transparent;
+  color: #ecf0f1;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+:deep(.marp-preview section table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.marp-preview section th) {
+  background-color: #3498db;
+  color: white;
+  font-weight: 600;
+  padding: 0.8rem;
+  text-align: left;
+}
+
+:deep(.marp-preview section td) {
+  padding: 0.8rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+:deep(.marp-preview section tr:nth-child(even)) {
+  background-color: #f8f9fa;
+}
+
+:deep(.marp-preview section tr:hover) {
+  background-color: #ecf0f1;
+}
+
+/* 自定义背景和布局支持 */
+:deep([data-marp-background]) {
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+:deep([data-marp-background-color]) {
+  background-color: attr(data-marp-background-color) !important;
+}
+
+/* 支持Marp的分栏布局 */
+:deep(.marp-preview section[data-marp-split="right"]) {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-areas: "left right";
+  gap: 20px;
+}
+
+:deep(.marp-preview section[data-marp-split="left"]) {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-areas: "right left";
+  gap: 20px;
+}
+
+/* 备用渲染的样式 */
 .marp-slides {
   display: flex;
   flex-direction: column;
@@ -482,14 +698,22 @@ export default {
   background-color: white;
   margin: 0 auto 30px;
   padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   width: 100%;
   max-width: 1000px;
   aspect-ratio: 16 / 9;
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.slide:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .error {
@@ -516,17 +740,40 @@ export default {
 }
 
 .nav-btn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: white;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #495057;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.prev-btn {
+  padding-left: 12px;
+}
+
+.prev-btn i {
+  margin-right: 8px;
+}
+
+.next-btn {
+  padding-right: 12px;
+}
+
+.next-btn i {
+  margin-left: 8px;
 }
 
 .nav-btn:hover:not(:disabled) {
-  background-color: #f0f0f0;
+  background-color: #f1f3f5;
+  border-color: #ced4da;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .nav-btn:disabled {
@@ -535,10 +782,14 @@ export default {
 }
 
 .slide-indicator {
-  font-size: 0.9rem;
-  color: #666;
-  min-width: 60px;
+  font-size: 1rem;
+  color: #495057;
+  font-weight: 500;
+  min-width: 80px;
   text-align: center;
+  background-color: #e9ecef;
+  padding: 8px 16px;
+  border-radius: 6px;
 }
 
 /* 为Marp渲染的内容添加样式 */
