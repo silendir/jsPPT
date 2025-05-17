@@ -297,50 +297,74 @@ export default {
               // 写入HTML内容
               const styleContent = previewElement.querySelector('style')?.innerHTML || '';
 
-              // 使用数组和join方法拼接HTML字符串，避免Vue编译器解析HTML标签
-              const htmlContent = [
-                '<!DOCTYPE html>',
-                '<html>',
-                '<head>',
-                  '<title>jsPPT演示文稿</title>',
-                  '<style>',
-                    'body { margin: 0; padding: 0; }',
-                    '.print-container { width: 100%; }',
-                    'section { ',
-                      'page-break-after: always; ',
-                      'height: 100vh;',
-                      'display: flex;',
-                      'flex-direction: column;',
-                      'justify-content: center;',
-                      'padding: 40px;',
-                      'box-sizing: border-box;',
-                    '}',
-                    'section:last-child { page-break-after: auto; }',
-                    '@media print {',
-                      'body { background: white; }',
-                      'section { ',
-                        'height: 100%; ',
-                        'page-break-inside: avoid;',
-                      '}',
-                    '}',
-                    styleContent,
-                  '</style>',
-                '</head>',
-                '<body>',
-                  '<div class="print-container">',
-                    previewElement.innerHTML,
-                  '</div>',
-                  '<scr' + 'ipt>',
-                    '// 自动打印',
-                    'window.onload = function() {',
-                      'setTimeout(function() {',
-                        'window.print();',
-                      '}, 500);',
-                    '};',
-                  '</scr' + 'ipt>',
-                '</body>',
-                '</html>'
-              ].join('');
+              // 使用字符串变量拼接HTML，避免Vue编译器解析HTML标签
+              const doctype = '<!DOCTYPE html>';
+              const htmlOpen = '<html>';
+              const htmlClose = '</html>';
+              const headOpen = '<head>';
+              const headClose = '</head>';
+              const bodyOpen = '<body>';
+              const bodyClose = '</body>';
+              const title = '<title>jsPPT演示文稿</title>';
+              const styleOpen = '<style>';
+              const styleClose = '</style>';
+              const divOpen = '<div class="print-container">';
+              const divClose = '</div>';
+
+              // 创建样式内容
+              const cssContent = `
+                body { margin: 0; padding: 0; }
+                .print-container { width: 100%; }
+                section {
+                  page-break-after: always;
+                  height: 100vh;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  padding: 40px;
+                  box-sizing: border-box;
+                }
+                section:last-child { page-break-after: auto; }
+                @media print {
+                  body { background: white; }
+                  section {
+                    height: 100%;
+                    page-break-inside: avoid;
+                  }
+                }
+                ${styleContent}
+              `;
+
+              // 创建脚本内容
+              const scriptOpen = '<scr' + 'ipt>';
+              const scriptClose = '</scr' + 'ipt>';
+              const scriptBody = `
+                // 自动打印
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                  }, 500);
+                };
+              `;
+              const scriptContent = scriptOpen + scriptBody + scriptClose;
+
+              // 组合HTML内容
+              const htmlContent =
+                doctype +
+                htmlOpen +
+                headOpen +
+                title +
+                styleOpen +
+                cssContent +
+                styleClose +
+                headClose +
+                bodyOpen +
+                divOpen +
+                previewElement.innerHTML +
+                divClose +
+                scriptContent +
+                bodyClose +
+                htmlClose;
 
               printWindow.document.write(htmlContent);
               printWindow.document.close();

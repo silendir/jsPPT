@@ -866,216 +866,75 @@ async function renderMarkdownToHTML(markdown, theme = 'default') {
  */
 export async function exportToPDF(markdown, filename = 'presentation.pdf', theme = 'default', options = {}) {
   try {
-    // 动态导入jspdf和html2canvas库
-    const jsPDF = (await import('jspdf')).default;
-    const html2canvas = (await import('html2canvas')).default;
-
     // 渲染Markdown为HTML
     const renderResult = await renderMarkdownToHTML(markdown, theme);
     const { html: fullHTML, slideCount } = renderResult;
 
-    // 创建一个临时的DOM元素来渲染HTML
-    const container = document.createElement('div');
-    container.innerHTML = fullHTML;
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    document.body.appendChild(container);
-
-    // 等待图片加载完成
-    await new Promise(resolve => {
-      const images = container.querySelectorAll('img');
-      let loadedCount = 0;
-
-      if (images.length === 0) {
-        resolve();
-        return;
-      }
-
-      images.forEach(img => {
-        if (img.complete) {
-          loadedCount++;
-          if (loadedCount === images.length) resolve();
-        } else {
-          img.onload = () => {
-            loadedCount++;
-            if (loadedCount === images.length) resolve();
-          };
-          img.onerror = () => {
-            loadedCount++;
-            if (loadedCount === images.length) resolve();
-          };
-        }
-      });
-    });
-
-    // 获取所有幻灯片元素
-    const slides = container.querySelectorAll('section');
-    if (!slides || slides.length === 0) {
-      throw new Error('未找到幻灯片内容');
+    // 创建一个打印窗口
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      throw new Error('无法打开打印窗口，请检查浏览器是否阻止了弹出窗口');
     }
 
-    // 创建PDF文档
-    const format = options.format || 'a4';
-    const orientation = options.orientation || 'landscape';
-    const pdf = new jsPDF({
-      orientation: orientation,
-      unit: 'mm',
-      format: format,
-      compress: true
-    });
+    // 提取样式
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = fullHTML;
+    const styleContent = tempDiv.querySelector('style')?.innerHTML || '';
 
-    // 设置PDF选项
-    const scale = options.scale || 2;
-    const margin = options.margin || 5;
+    // 创建打印友好的HTML
+    const printHTML = [
+      '<!DOCTYPE html>',
+      '<html>',
+      '<head>',
+        '<title>jsPPT演示文稿</title>',
+        '<style>',
+          'body { margin: 0; padding: 0; }',
+          '.print-container { width: 100%; }',
+          'section { ',
+            'page-break-after: always; ',
+            'height: 100vh;',
+            'display: flex;',
+            'flex-direction: column;',
+            'justify-content: center;',
+            'padding: 40px;',
+            'box-sizing: border-box;',
+          '}',
+          'section:last-child { page-break-after: auto; }',
+          '@media print {',
+            'body { background: white; }',
+            'section { ',
+              'height: 100%; ',
+              'page-break-inside: avoid;',
+            '}',
+          '}',
+          styleContent,
+        '</style>',
+      '</head>',
+      '<body>',
+        '<div class="print-container">',
+          fullHTML,
+        '</div>',
+        '<scr' + 'ipt>',
+          '// 自动打印',
+          'window.onload = function() {',
+            'setTimeout(function() {',
+              'window.print();',
+            '}, 500);',
+          '};',
+        '</scr' + 'ipt>',
+      '</body>',
+      '</html>'
+    ].join('');
 
-    // 计算PDF页面尺寸
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+    // 写入HTML内容
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
 
-    // 处理每张幻灯片
-    for (let i = 0; i < slides.length; i++) {
-      // 克隆幻灯片以便单独处理
-      const slide = slides[i].cloneNode(true);
-      const tempDiv = document.createElement('div');
-      tempDiv.appendChild(slide);
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      document.body.appendChild(tempDiv);
-
-      // 设置幻灯片样式以便正确渲染
-      slide.style.width = '1280px'; // 16:9比例的宽度
-      slide.style.height = '720px'; // 16:9比例的高度
-      slide.style.display = 'flex';
-      slide.style.flexDirection = 'column';
-      slide.style.justifyContent = 'flex-start';
-      slide.style.alignItems = 'flex-start';
-      slide.style.padding = '40px';
-      slide.style.boxSizing = 'border-box';
-      slide.style.backgroundColor = 'white';
-      slide.style.overflow = 'hidden';
-
-      try {
-        // 使用html2canvas将幻灯片转换为canvas
-        const canvas = await html2canvas(slide, {
-          scale: scale,
-          useCORS: true,
-          letterRendering: true,
-          logging: false,
-          allowTaint: true,
-          backgroundColor: 'white'
-        });
-
-        // 将canvas转换为图片
-        const imgData = canvas.toDataURL('image/jpeg', 0.98);
-
-        // 计算图片尺寸以适应PDF页面
-        const imgWidth = pdfWidth - (margin * 2);
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        // 添加图片到PDF
-        pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
-
-        // 如果不是最后一张幻灯片，添加新页面
-        if (i < slides.length - 1) {
-          pdf.addPage();
-        }
-      } finally {
-        // 清理临时元素
-        document.body.removeChild(tempDiv);
-      }
-    }
-
-    // 保存PDF
-    pdf.save(filename);
-
-    // 清理临时DOM元素
-    document.body.removeChild(container);
-
-    console.log(`成功导出PDF，共${slideCount}张幻灯片`);
+    console.log(`成功打开PDF打印预览，共${slideCount}张幻灯片`);
     return true;
   } catch (error) {
     console.error('PDF导出失败:', error);
-
-    // 尝试使用备用方法
-    try {
-      console.log('尝试使用备用方法导出PDF...');
-      return await exportToPDFFallback(markdown, filename, theme, options);
-    } catch (fallbackError) {
-      console.error('备用PDF导出方法也失败:', fallbackError);
-      throw error; // 抛出原始错误
-    }
-  }
-}
-
-/**
- * 备用PDF导出方法
- * @param {String} markdown Markdown内容
- * @param {String} filename 文件名
- * @param {String} theme 主题名称
- * @param {Object} options 导出选项
- * @returns {Promise<Boolean>} 是否导出成功
- */
-async function exportToPDFFallback(markdown, filename = 'presentation.pdf', theme = 'default', options = {}) {
-  // 动态导入jspdf和html2canvas库
-  const jsPDF = (await import('jspdf')).default;
-
-  // 渲染Markdown为HTML
-  const renderResult = await renderMarkdownToHTML(markdown, theme);
-  const { html: fullHTML, slideCount } = renderResult;
-
-  // 创建一个临时的DOM元素来渲染HTML
-  const container = document.createElement('div');
-  container.innerHTML = fullHTML;
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  document.body.appendChild(container);
-
-  try {
-    // 创建PDF文档
-    const format = options.format || 'a4';
-    const orientation = options.orientation || 'landscape';
-    const pdf = new jsPDF({
-      orientation: orientation,
-      unit: 'mm',
-      format: format
-    });
-
-    // 获取所有幻灯片元素
-    const slides = container.querySelectorAll('section');
-    if (!slides || slides.length === 0) {
-      throw new Error('未找到幻灯片内容');
-    }
-
-    // 使用简单的文本提取方法
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
-
-      // 提取文本内容
-      const title = slide.querySelector('h1, h2, h3')?.textContent || '';
-      const textContent = slide.textContent || '';
-
-      // 添加到PDF
-      pdf.setFontSize(24);
-      pdf.text(title, 20, 20);
-
-      pdf.setFontSize(12);
-      const lines = pdf.splitTextToSize(textContent, pdf.internal.pageSize.getWidth() - 40);
-      pdf.text(lines, 20, 40);
-
-      // 如果不是最后一张幻灯片，添加新页面
-      if (i < slides.length - 1) {
-        pdf.addPage();
-      }
-    }
-
-    // 保存PDF
-    pdf.save(filename);
-
-    console.log(`成功使用备用方法导出PDF，共${slideCount}张幻灯片`);
-    return true;
-  } finally {
-    // 清理临时DOM元素
-    document.body.removeChild(container);
+    throw error;
   }
 }
 
