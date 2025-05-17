@@ -864,6 +864,18 @@ async function renderMarkdownToHTML(markdown, theme = 'default') {
  * @param {Object} options 导出选项
  * @returns {Promise<Boolean>} 是否导出成功
  */
+/**
+ * 导出为PDF（使用浏览器打印功能）
+ *
+ * 注意：此函数不再使用jsPDF库，而是直接使用浏览器的打印功能
+ * 这样可以避免"Cannot access uninitialized variable"等错误
+ *
+ * @param {String} markdown Markdown内容
+ * @param {String} filename 文件名（仅用于显示，实际文件名由浏览器打印功能决定）
+ * @param {String} theme 主题名称
+ * @param {Object} options 导出选项（仅用于兼容旧代码，不再使用）
+ * @returns {Promise<Boolean>} 是否成功打开打印预览
+ */
 export async function exportToPDF(markdown, filename = 'presentation.pdf', theme = 'default', options = {}) {
   try {
     // 渲染Markdown为HTML
@@ -881,53 +893,77 @@ export async function exportToPDF(markdown, filename = 'presentation.pdf', theme
     tempDiv.innerHTML = fullHTML;
     const styleContent = tempDiv.querySelector('style')?.innerHTML || '';
 
-    // 创建打印友好的HTML
-    const printHTML = [
-      '<!DOCTYPE html>',
-      '<html>',
-      '<head>',
-        '<title>jsPPT演示文稿</title>',
-        '<style>',
-          'body { margin: 0; padding: 0; }',
-          '.print-container { width: 100%; }',
-          'section { ',
-            'page-break-after: always; ',
-            'height: 100vh;',
-            'display: flex;',
-            'flex-direction: column;',
-            'justify-content: center;',
-            'padding: 40px;',
-            'box-sizing: border-box;',
-          '}',
-          'section:last-child { page-break-after: auto; }',
-          '@media print {',
-            'body { background: white; }',
-            'section { ',
-              'height: 100%; ',
-              'page-break-inside: avoid;',
-            '}',
-          '}',
-          styleContent,
-        '</style>',
-      '</head>',
-      '<body>',
-        '<div class="print-container">',
-          fullHTML,
-        '</div>',
-        '<scr' + 'ipt>',
-          '// 自动打印',
-          'window.onload = function() {',
-            'setTimeout(function() {',
-              'window.print();',
-            '}, 500);',
-          '};',
-        '</scr' + 'ipt>',
-      '</body>',
-      '</html>'
-    ].join('');
+    // 使用字符串变量拼接HTML，避免Vue编译器解析HTML标签
+    const doctype = '<!DOCTYPE html>';
+    const htmlOpen = '<html>';
+    const htmlClose = '</html>';
+    const headOpen = '<head>';
+    const headClose = '</head>';
+    const bodyOpen = '<body>';
+    const bodyClose = '</body>';
+    const title = '<title>jsPPT演示文稿</title>';
+    const styleOpen = '<style>';
+    const styleClose = '</style>';
+    const divOpen = '<div class="print-container">';
+    const divClose = '</div>';
+
+    // 创建样式内容
+    const cssContent = `
+      body { margin: 0; padding: 0; }
+      .print-container { width: 100%; }
+      section {
+        page-break-after: always;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 40px;
+        box-sizing: border-box;
+      }
+      section:last-child { page-break-after: auto; }
+      @media print {
+        body { background: white; }
+        section {
+          height: 100%;
+          page-break-inside: avoid;
+        }
+      }
+      ${styleContent}
+    `;
+
+    // 创建脚本内容
+    const scriptOpen = '<scr' + 'ipt>';
+    const scriptClose = '</scr' + 'ipt>';
+    const scriptBody = `
+      // 自动打印
+      window.onload = function() {
+        setTimeout(function() {
+          window.print();
+        }, 500);
+      };
+    `;
+    const scriptContent = scriptOpen + scriptBody + scriptClose;
+
+    // 组合HTML内容
+    const htmlContent =
+      doctype +
+      htmlOpen +
+      headOpen +
+      title +
+      styleOpen +
+      cssContent +
+      styleClose +
+      headClose +
+      bodyOpen +
+      divOpen +
+      tempDiv.innerHTML +
+      divClose +
+      scriptContent +
+      bodyClose +
+      htmlClose;
 
     // 写入HTML内容
-    printWindow.document.write(printHTML);
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
 
     console.log(`成功打开PDF打印预览，共${slideCount}张幻灯片`);
