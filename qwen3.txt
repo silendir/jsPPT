@@ -1,0 +1,1031 @@
+TITLE: Basic vLLM Library Usage for Inference (Python)
+DESCRIPTION: This Python script demonstrates how to use the vLLM library for generating text with a Qwen3 model. It initializes the tokenizer and vLLM engine, defines sampling parameters, prepares the input prompt using the chat template, generates output, and prints the result.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/deployment/vllm.md#_snippet_6
+
+LANGUAGE: Python
+CODE:
+```
+from transformers import AutoTokenizer
+from vllm import LLM, SamplingParams
+
+# Initialize the tokenizer
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-8B")
+
+# Configurae the sampling parameters (for thinking mode)
+sampling_params = SamplingParams(temperature=0.6, top_p=0.95, top_k=20, max_tokens=32768)
+
+# Initialize the vLLM engine
+llm = LLM(model="Qwen/Qwen3-8B")
+
+# Prepare the input to the model
+prompt = "Give me a short introduction to large language models."
+messages = [
+    {"role": "user", "content": prompt}
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+)
+
+# Generate outputs
+outputs = llm.generate([text], sampling_params)
+
+# Print the outputs.
+for output in outputs:
+    prompt = output.prompt
+    generated_text = output.outputs[0].text
+    print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+```
+
+----------------------------------------
+
+TITLE: Generate Text with Qwen3 using Transformers (Python)
+DESCRIPTION: Demonstrates how to load the Qwen3 model and tokenizer using the Hugging Face Transformers library, prepare chat-formatted input, and generate text completions. Requires transformers>=4.51.0.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/README.md#_snippet_0
+
+LANGUAGE: python
+CODE:
+```
+from transformers import AutoModelForCausalLM, AutoTokenizer
+model_name = "Qwen/Qwen3-8B"
+
+# load the tokenizer and the model
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+
+# prepare the model input
+prompt = "Give me a short introduction to large language models."
+messages = [
+    {"role": "user", "content": prompt}
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=True # Switches between thinking and non-thinking modes. Default is True.
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+# conduct text completion
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=32768
+)
+output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() 
+
+# the result will begin with thinking content in <think></think> tags, followed by the actual response
+print(tokenizer.decode(output_ids, skip_special_tokens=True))
+```
+
+----------------------------------------
+
+TITLE: Loading Qwen Model and Tokenizer with Transformers (Python)
+DESCRIPTION: This Python code loads the Qwen2.5-7B-Instruct model and its corresponding tokenizer from the Hugging Face Hub using the `transformers` library. It configures the model for automatic device mapping and data type handling.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_14
+
+LANGUAGE: python
+CODE:
+```
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name_or_path = "Qwen/Qwen2.5-7B-Instruct"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name_or_path,
+    torch_dtype="auto",
+    device_map="auto",
+)
+```
+
+----------------------------------------
+
+TITLE: Run Qwen3 Inference with Hugging Face Transformers (Python)
+DESCRIPTION: Demonstrates loading the Qwen3-8B model and tokenizer using Hugging Face Transformers, preparing chat input, generating text, and parsing the output including the thinking content block. Requires `transformers>=4.51.0`.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/getting_started/quickstart.md#_snippet_0
+
+LANGUAGE: python
+CODE:
+```
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen3-8B"
+
+# load the tokenizer and the model
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# prepare the model input
+prompt = "Give me a short introduction to large language models."
+messages = [
+    {"role": "user", "content": prompt},
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=True, # Switches between thinking and non-thinking modes. Default is True.
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+# conduct text completion
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=32768
+)
+output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
+
+# parse thinking content
+try:
+    # rindex finding 151668 (</think>)
+    index = len(output_ids) - output_ids[::-1].index(151668)
+except ValueError:
+    index = 0
+
+thinking_content = tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
+content = tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
+
+print("thinking content:", thinking_content)
+print("content:", content)
+```
+
+----------------------------------------
+
+TITLE: Running Default Qwen2.5 Model with Ollama (Bash)
+DESCRIPTION: This command pulls and runs the default Qwen2.5 model available on Ollama. It's the simplest way to get started with Qwen2.5 locally using Ollama.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/run_locally/ollama.md#_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+ollama run qwen2.5
+```
+
+----------------------------------------
+
+TITLE: Starting vLLM Service for Qwen3 (Bash)
+DESCRIPTION: This bash command launches a vLLM server for the Qwen/Qwen3-8B model. It enables reasoning features using the deepseek_r1 parser. Ensure vLLM version 0.8.5 or higher is installed.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/getting_started/quickstart.md#_snippet_3
+
+LANGUAGE: bash
+CODE:
+```
+vllm serve Qwen/Qwen3-8B --enable-reasoning --reasoning-parser deepseek_r1
+```
+
+----------------------------------------
+
+TITLE: Perform Batch Generation with Qwen3 using Transformers Pipeline (Python)
+DESCRIPTION: Illustrates how to initialize a Hugging Face Transformers `pipeline` for text generation using the Qwen3 model and perform inference on a batch of inputs. It configures the pipeline for automatic device mapping and data type, sets the tokenizer padding side, prepares a list of input prompts, and processes them in a batch.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_13
+
+LANGUAGE: python
+CODE:
+```
+from transformers import pipeline
+
+model_name_or_path = "Qwen/Qwen3-8B"
+
+generator = pipeline(
+    "text-generation", 
+    model_name_or_path, 
+    torch_dtype="auto", 
+    device_map="auto",
+)
+generator.tokenizer.padding_side="left"
+
+batch = [
+    [{"role": "user", "content": "Give me a short introduction to large language models."}],
+    [{"role": "user", "content": "Give me a detailed introduction to large language model."}],
+]
+
+results = generator(batch, max_new_tokens=32768, batch_size=2)
+batch = [result[0]["generated_text"] for result in results]
+```
+
+----------------------------------------
+
+TITLE: Develop Custom Qwen-Agent with Tools (Python)
+DESCRIPTION: This Python script demonstrates how to initialize a Qwen-Agent Assistant, configure the LLM, define a custom tool (`my_image_gen`) using the `@register_tool` decorator, and run an interactive chat loop using the agent with the custom tool and a built-in tool (`code_interpreter`). It also shows how to pass a document file to the agent.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/qwen_agent.rst#_snippet_1
+
+LANGUAGE: python
+CODE:
+```
+import json
+import os
+
+import json5
+import urllib.parse
+from qwen_agent.agents import Assistant
+from qwen_agent.tools.base import BaseTool, register_tool
+
+llm_cfg = {
+    # Use the model service provided by DashScope:
+    'model': 'qwen-max',
+    'model_server': 'dashscope',
+    # 'api_key': 'YOUR_DASHSCOPE_API_KEY',
+    # It will use the `DASHSCOPE_API_KEY' environment variable if 'api_key' is not set here.
+
+    # Use your own model service compatible with OpenAI API:
+    # 'model': 'Qwen/Qwen2.5-7B-Instruct',
+    # 'model_server': 'http://localhost:8000/v1',  # api_base
+    # 'api_key': 'EMPTY',
+
+    # (Optional) LLM hyperparameters for generation:
+    'generate_cfg': {
+        'top_p': 0.8
+    }
+}
+system = 'According to the user\'s request, you first draw a picture and then automatically run code to download the picture ' + \
+          'and select an image operation from the given document to process the image'
+
+# Add a custom tool named my_image_gen：
+@register_tool('my_image_gen')
+class MyImageGen(BaseTool):
+    description = 'AI painting (image generation) service, input text description, and return the image URL drawn based on text information.'
+    parameters = [{
+        'name': 'prompt',
+        'type': 'string',
+        'description': 'Detailed description of the desired image content, in English',
+        'required': True
+    }]
+
+    def call(self, params: str, **kwargs) -> str:
+        prompt = json5.loads(params)['prompt']
+        prompt = urllib.parse.quote(prompt)
+        return json.dumps(
+            {'image_url': f'https://image.pollinations.ai/prompt/{prompt}'},
+            ensure_ascii=False)
+
+
+tools = ['my_image_gen', 'code_interpreter']  # code_interpreter is a built-in tool in Qwen-Agent
+bot = Assistant(llm=llm_cfg,
+                system_message=system,
+                function_list=tools,
+                files=[os.path.abspath('doc.pdf')])
+
+messages = []
+while True:
+    query = input('user question: ')
+    messages.append({'role': 'user', 'content': query})
+    response = []
+    for response in bot.run(messages=messages):
+        print('bot response:', response)
+    messages.extend(response)
+```
+
+----------------------------------------
+
+TITLE: Define Qwen Function Calling Tools JSON
+DESCRIPTION: This JSON snippet defines the structure for function calling tools used with Qwen models. It includes two example functions, `get_temperature` and `get_temperature_date`, illustrating how to specify function names, descriptions, and parameters using JSON Schema, including types, required fields, and enums.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_2
+
+LANGUAGE: JSON
+CODE:
+```
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_temperature",
+      "description": "Get temperature at a location.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location to get the temperature for, in the format \"City, State, Country\"."
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ],
+            "description": "The unit to return the temperature in. Defaults to \"celsius\"."
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_temperature_date",
+      "description": "Get temperature at a location and date.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location to get the temperature for, in the format \"City, State, Country\"."
+          },
+          "date": {
+            "type": "string",
+            "description": "The date to get the temperature for, in the format \"Year-Month-Day\"."
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ],
+            "description": "The unit to return the temperature in. Defaults to \"celsius\"."
+          }
+        },
+        "required": [
+          "location",
+          "date"
+        ]
+      }
+    }
+  }
+]
+```
+
+----------------------------------------
+
+TITLE: Calling vLLM OpenAI-Compatible API with OpenAI Python Client (Python)
+DESCRIPTION: This Python snippet uses the OpenAI client library to interact with a vLLM server hosting an AWQ Qwen model. It configures the client to point to the local vLLM API endpoint and sends a chat completion request.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/quantization/awq.md#_snippet_3
+
+LANGUAGE: python
+CODE:
+```
+from openai import OpenAI
+
+openai_api_key = "EMPTY"
+openai_api_base = "http://localhost:8000/v1"
+
+client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
+
+chat_response = client.chat.completions.create(
+    model="Qwen/Qwen2.5-7B-Instruct-AWQ",
+    messages=[
+        {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+        {"role": "user", "content": "Tell me something about large language models."},
+    ],
+    temperature": 0.7,
+    "top_p": 0.8,
+    "max_tokens": 512,
+    extra_body={
+        "repetition_penalty": 1.05,
+    },
+)
+print("Chat response:", chat_response)
+```
+
+----------------------------------------
+
+TITLE: Example Message History with Tool Results - Python
+DESCRIPTION: Illustrates the structure of the messages list after the assistant's tool call message and the subsequent 'tool' messages containing the function execution results have been appended. It shows the sequence of system, user, assistant (with tool calls), and tool messages.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_31
+
+LANGUAGE: python
+CODE:
+```
+[
+    {'role': 'system', 'content': 'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\n\nCurrent Date: 2024-09-30'},
+    {'role': 'user', 'content': "What's the temperature in San Francisco now? How about tomorrow?"},
+    {'content': None, 'role': 'assistant', 'function_call': None, 'tool_calls': [
+        {'id': 'chatcmpl-tool-924d705adb044ff88e0ef3afdd155f15', 'function': {'arguments': '{"location": "San Francisco, CA, USA"}', 'name': 'get_current_temperature'}, 'type': 'function'},
+        {'id': 'chatcmpl-tool-7e30313081944b11b6e5ebfd02e8e501', 'function': {'arguments': '{"location": "San Francisco, CA, USA", "date": "2024-10-01"}', 'name': 'get_temperature_date'}, 'type': 'function'},
+    ]},
+    {'role': 'tool', 'content': '{"temperature": 26.1, "location": "San Francisco, CA, USA", "unit": "celsius"}', 'tool_call_id': 'chatcmpl-tool-924d705adb044ff88e0ef3afdd155f15'},
+    {'role': 'tool', 'content': '{"temperature": 25.9, "location": "San Francisco, CA, USA", "date": "2024-10-01", "unit": "celsius"}', 'tool_call_id': 'chatcmpl-tool-7e30313081944b11b6e5ebfd02e8e501'},
+]
+```
+
+----------------------------------------
+
+TITLE: Example Qwen Tool Call Response Structure - Python
+DESCRIPTION: Shows the structure of the Choice object returned by the Qwen model when it decides to make tool calls. It highlights the finish_reason being 'tool_calls' and the presence of the tool_calls list within the message object, detailing the function name, arguments, and ID for each call.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_29
+
+LANGUAGE: python
+CODE:
+```
+Choice(
+    finish_reason='tool_calls', 
+    index=0, 
+    logprobs=None, 
+    message=ChatCompletionMessage(
+        content=None, 
+        role='assistant', 
+        function_call=None, 
+        tool_calls=[
+            ChatCompletionMessageToolCall(
+                id='chatcmpl-tool-924d705adb044ff88e0ef3afdd155f15', 
+                function=Function(arguments='{"location": "San Francisco, CA, USA"}', name='get_current_temperature'), 
+                type='function',
+            ), 
+            ChatCompletionMessageToolCall(
+                id='chatcmpl-tool-7e30313081944b11b6e5ebfd02e8e501', 
+                function=Function(arguments='{"location": "San Francisco, CA, USA", "date": "2024-10-01"}', name='get_temperature_date'), 
+                type='function',
+            ),
+        ],
+    ), 
+    stop_reason=None,
+)
+```
+
+----------------------------------------
+
+TITLE: Performing Inference with AWQ Qwen Model using Hugging Face Transformers (Python)
+DESCRIPTION: This snippet demonstrates how to load and run inference with an AWQ quantized Qwen model using the Hugging Face transformers library. It shows model and tokenizer loading, chat template application, and text generation.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/quantization/awq.md#_snippet_0
+
+LANGUAGE: python
+CODE:
+```
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name, 
+    device_map="auto",
+)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+prompt = "Give me a short introduction to large language models."
+messages = [
+    {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+    {"role": "user", "content": prompt},
+]
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+generated_ids = model.generate(
+    **model_inputs,
+    max_new_tokens=512,
+)
+generated_ids = [
+    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+]
+
+response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+```
+
+----------------------------------------
+
+TITLE: Starting vLLM OpenAI-Compatible Server
+DESCRIPTION: Provides the bash command to start a vLLM server for a specific Qwen model, enabling auto tool choice and specifying the Hermes-style tool call parser for compatibility.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_25
+
+LANGUAGE: bash
+CODE:
+```
+vllm serve Qwen/Qwen2.5-7B-Instruct --enable-auto-tool-choice --tool-call-parser hermes
+```
+
+----------------------------------------
+
+TITLE: Run Supervised Finetuning with LLaMA-Factory (Bash)
+DESCRIPTION: Executes the supervised finetuning process using torchrun and LLaMA-Factory's train.py script, configuring distributed training, model path, dataset, template, finetuning type (LoRA), and various hyperparameters.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/training/llama_factory.rst#_snippet_5
+
+LANGUAGE: bash
+CODE:
+```
+DISTRIBUTED_ARGS="
+    --nproc_per_node $NPROC_PER_NODE \
+    --nnodes $NNODES \
+    --node_rank $NODE_RANK \
+    --master_addr $MASTER_ADDR \
+    --master_port $MASTER_PORT
+  "
+
+torchrun $DISTRIBUTED_ARGS src/train.py \
+    --deepspeed $DS_CONFIG_PATH \
+    --stage sft \
+    --do_train \
+    --use_fast_tokenizer \
+    --flash_attn \
+    --model_name_or_path $MODEL_PATH \
+    --dataset your_dataset \
+    --template qwen \
+    --finetuning_type lora \
+    --lora_target q_proj,v_proj\
+    --output_dir $OUTPUT_PATH \
+    --overwrite_cache \
+    --overwrite_output_dir \
+    --warmup_steps 100 \
+    --weight_decay 0.1 \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --ddp_timeout 9000 \
+    --learning_rate 5e-6 \
+    --lr_scheduler_type cosine \
+    --logging_steps 1 \
+    --cutoff_len 4096 \
+    --save_steps 1000 \
+    --plot_loss \
+    --num_train_epochs 3 \
+    --bf16
+```
+
+----------------------------------------
+
+TITLE: Call TGI Streaming API with curl
+DESCRIPTION: Shows how to use the `curl` command to interact with the TGI streaming endpoint (`/generate_stream`) to get a text generation response. It includes basic parameters like input text and max tokens.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/deployment/tgi.rst#_snippet_1
+
+LANGUAGE: bash
+CODE:
+```
+curl http://localhost:8080/generate_stream -H 'Content-Type: application/json' \
+        -d '{"inputs":"Tell me something about large language models.","parameters":{"max_new_tokens":512}}'
+```
+
+----------------------------------------
+
+TITLE: Enabling YaRN Long Context via Transformers Pipeline model_kwargs (Python)
+DESCRIPTION: This Python code demonstrates how to enable YaRN scaling for long context directly when loading a Qwen3 model using the transformers.pipeline. The YaRN configuration is passed via the model_kwargs dictionary, overriding default settings without modifying the model files. This method is useful for temporary or dynamic configuration.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_9
+
+LANGUAGE: python
+CODE:
+```
+from transformers import pipeline
+
+model_name_or_path = "Qwen/Qwen3-8B"
+
+generator = pipeline(
+    "text-generation", 
+    model_name_or_path, 
+    torch_dtype="auto", 
+    device_map="auto",
+    model_kwargs={
+        "rope_scaling": {
+            "rope_type": "yarn",
+            "factor": 4.0,
+            "original_max_position_embeddings": 32768
+        }
+    }
+)
+```
+
+----------------------------------------
+
+TITLE: Serve Qwen GPTQ Model with vLLM
+DESCRIPTION: Launches an OpenAI-compatible API service using vLLM to serve the specified Qwen2.5-7B-Instruct-GPTQ-Int4 model. This command starts the server listening for API requests.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/quantization/gptq.md#_snippet_2
+
+LANGUAGE: bash
+CODE:
+```
+vllm serve Qwen2.5-7B-Instruct-GPTQ-Int4
+```
+
+----------------------------------------
+
+TITLE: Call TGI OpenAI Style API with curl
+DESCRIPTION: Demonstrates how to use `curl` to interact with the TGI OpenAI-compatible chat completions endpoint (`/v1/chat/completions`). It shows the JSON payload structure for chat messages and generation parameters.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/deployment/tgi.rst#_snippet_2
+
+LANGUAGE: bash
+CODE:
+```
+curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{
+  "model": "",
+  "messages": [
+    {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+    {"role": "user", "content": "Tell me something about large language models."}
+  ],
+  "temperature": 0.7,
+  "top_p": 0.8,
+  "repetition_penalty": 1.05,
+  "max_tokens": 512
+}'
+```
+
+----------------------------------------
+
+TITLE: JSON Schema for Temperature Tools
+DESCRIPTION: This JSON snippet provides the structured definition for the temperature retrieval tools. These definitions follow the JSON Schema standard and are used by the language model to understand the available functions, their parameters, and descriptions, enabling it to generate appropriate tool calls.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_1
+
+LANGUAGE: json
+CODE:
+```
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_current_temperature",
+      "description": "Get current temperature at a location.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location to get the temperature for, in the format \"City, State, Country\"."
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["celsius", "fahrenheit"],
+            "description": "The unit to return the temperature in. Defaults to \"celsius\"."
+          }
+        },
+        "required": ["location"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_temperature_date",
+      "description": "Get temperature at a location and date.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location to get the temperature for, in the format \"City, State, Country\"."
+          },
+          "date": {
+            "type": "string",
+            "description": "The date to get the temperature for, in the format \"Year-Month-Day\"."
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["celsius", "fahrenheit"],
+            "description": "The unit to return the temperature in. Defaults to \"celsius\"."
+          }
+        },
+        "required": ["location", "date"]
+      }
+    }
+  }
+]
+```
+
+----------------------------------------
+
+TITLE: Serving Quantized Qwen3 Models with Transformers Pipeline (Python)
+DESCRIPTION: This Python code demonstrates how to load and initialize a text generation pipeline using a quantized Qwen3 model (FP8 or AWQ) from the Hugging Face Hub. It sets the model name, uses torch_dtype='auto' and device_map='auto' for automatic configuration, and prepares the pipeline for inference. Requires Transformers library and appropriate hardware support for FP8.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_7
+
+LANGUAGE: python
+CODE:
+```
+from transformers import pipeline
+
+model_name_or_path = "Qwen/Qwen3-8B-FP8" # FP8 models
+# model_name_or_path = "Qwen/Qwen3-8B-AWQ" # AWQ models
+
+generator = pipeline(
+    "text-generation", 
+    model_name_or_path, 
+    torch_dtype="auto", 
+    device_map="auto",
+)
+```
+
+----------------------------------------
+
+TITLE: Defining Tools with JSON Schema
+DESCRIPTION: This JSON array defines the available functions (tools) that the language model can call. Each function includes its name, description, and parameters specified using a JSON Schema-like structure, indicating parameter types, descriptions, and required fields.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_42
+
+LANGUAGE: JSON
+CODE:
+```
+[
+{"type": "function", "function": {"name": "get_current_temperature", "description": "Get current temperature at a location.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The location to get the temperature for, in the format \"City, State, Country\"."}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "description": "The unit to return the temperature in. Defaults to \"celsius\"."}}, "required": ["location"]}}},
+{"type": "function", "function": {"name": "get_temperature_date", "description": "Get temperature at a location and date.", "parameters": {"type": "object", "properties": {"location": {"type": "string", "description": "The location to get the temperature for, in the format \"City, State, Country\"."}, "date": {"type": "string", "description": "The date to get the temperature for, in the format \"Year-Month-Day\"."}, "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "description": "The unit to return the temperature in. Defaults to \"celsius\"."}}, "required": ["location", "date"]}}}
+]
+```
+
+----------------------------------------
+
+TITLE: Generating Model Response with Transformers
+DESCRIPTION: Applies chat template, tokenizes input, and generates model output using the transformers library.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_17
+
+LANGUAGE: Python
+CODE:
+```
+text = tokenizer.apply_chat_template(messages, tools=tools, add_generation_prompt=True, tokenize=False)
+inputs = tokenizer(text, return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=512)
+output_text = tokenizer.batch_decode(outputs)[0][len(text):]
+```
+
+----------------------------------------
+
+TITLE: Example RAG System Setup (Python)
+DESCRIPTION: Demonstrates how to initialize components for a RAG system. It loads documents, sets up embedding and language models (Qwen, HuggingFaceEmbeddings), creates a FAISS index using the custom wrapper, and defines a prompt template.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/Langchain.rst#_snippet_6
+
+LANGUAGE: Python
+CODE:
+```
+if __name__ == '__main__':
+        # load docs (pdf file or txt file)
+        filepath = 'your file path'
+        # Embedding model name
+        EMBEDDING_MODEL = 'text2vec'
+        PROMPT_TEMPLATE = """Known information:
+        {context_str}
+        Based on the above known information, respond to the user's question concisely and professionally. If an answer cannot be derived from it, say 'The question cannot be answered with the given information' or 'Not enough relevant information has been provided,' and do not include fabricated details in the answer. Please respond in English. The question is {question}"""
+        # Embedding running device
+        EMBEDDING_DEVICE = "cuda"
+        # return top-k text chunk from vector store
+        VECTOR_SEARCH_TOP_K = 3
+        CHAIN_TYPE = 'stuff'
+        embedding_model_dict = {
+            "text2vec": "your text2vec model path",
+        }
+        llm = Qwen()
+        embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[EMBEDDING_MODEL],model_kwargs={'device': EMBEDDING_DEVICE})
+        
+        docs = load_file(filepath)
+        
+        docsearch = FAISSWrapper.from_documents(docs, embeddings)
+        
+        prompt = PromptTemplate(
+```
+
+----------------------------------------
+
+TITLE: Serving Qwen3 with vLLM (Shell)
+DESCRIPTION: This command starts a vLLM server for the Qwen3-8B model. It sets the API port to 8000, enables reasoning, and specifies the reasoning parser as `deepseek_r1`. Requires `vllm>=0.8.5`. An OpenAI-compatible API will be available at `http://localhost:8000/v1`.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/README.md#_snippet_6
+
+LANGUAGE: Shell
+CODE:
+```
+vllm serve Qwen/Qwen3-8B --port 8000 --enable-reasoning --reasoning-parser deepseek_r1
+```
+
+----------------------------------------
+
+TITLE: Send Chat Completion Request to Qwen Endpoint
+DESCRIPTION: Sends a chat completion request to the Qwen service endpoint using curl. The request includes a list of messages with roles (system, user) and content, formatted for an OpenAI-compatible chat endpoint.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/deployment/skypilot.rst#_snippet_5
+
+LANGUAGE: bash
+CODE:
+```
+curl -L http://$IP:8000/v1/chat/completions \
+   -H "Content-Type: application/json" \
+   -d '{
+      "model": "Qwen/Qwen2.5-72B-Instruct",
+      "messages": [
+      {
+         "role": "system",
+         "content": "You are Qwen, created by Alibaba Cloud. You are a helpful and honest chat expert."
+      },
+      {
+         "role": "user",
+         "content": "What is the best food?"
+      }
+      ],
+      "max_tokens": 512
+}' | jq -r '.choices[0].message.content'
+```
+
+----------------------------------------
+
+TITLE: Appending Tool Call Result to Messages
+DESCRIPTION: Parses the model's output text for tool calls and appends the result as an assistant message to the messages list.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_18
+
+LANGUAGE: Python
+CODE:
+```
+messages.append(try_parse_tool_calls(output_text))
+```
+
+----------------------------------------
+
+TITLE: Implementing Streaming Generation with TextIteratorStreamer (Python)
+DESCRIPTION: This Python code sets up a text generation pipeline and a TextIteratorStreamer for streaming output. Unlike TextStreamer, TextIteratorStreamer stores the generated text in a queue, allowing a downstream application to consume it as an iterator. This is suitable for integrating streaming into UIs or other processes.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_11
+
+LANGUAGE: python
+CODE:
+```
+from transformers import pipeline, TextIteratorStreamer
+
+model_name_or_path = "Qwen/Qwen3-8B"
+
+generator = pipeline(
+    "text-generation", 
+    model_name_or_path, 
+    torch_dtype="auto", 
+    device_map="auto",
+)
+
+streamer = TextIteratorStreamer(pipe.tokenizer, skip_prompt=True, skip_special_tokens=True)
+```
+
+----------------------------------------
+
+TITLE: Calling Qwen-Agent Chat Method with Parallel Function Calls in Python
+DESCRIPTION: This Python code demonstrates how to call the `llm.chat` method provided by Qwen-Agent. It passes the current `messages`, a list of `functions`, and an `extra_generate_cfg` dictionary enabling `parallel_function_calls`. The loop processes the generator output and extends the `messages` list with the model's responses.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_7
+
+LANGUAGE: python
+CODE:
+```
+for responses in llm.chat(
+    messages=messages,
+    functions=functions,
+    extra_generate_cfg=dict(parallel_function_calls=True),
+):
+    pass
+messages.extend(responses)
+```
+
+----------------------------------------
+
+TITLE: Call vLLM OpenAI API using Curl
+DESCRIPTION: Demonstrates how to make a chat completion request to the vLLM OpenAI-compatible API endpoint using the `curl` command-line tool. It sends a JSON payload specifying the model, messages, and generation parameters.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/quantization/gptq.md#_snippet_3
+
+LANGUAGE: bash
+CODE:
+```
+curl http://localhost:8000/v1/chat/completions -H "Content-Type: application/json" -d '{
+  "model": "Qwen2.5-7B-Instruct-GPTQ-Int4",
+  "messages": [
+    {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+    {"role": "user", "content": "Tell me something about large language models."}
+  ],
+  "temperature": 0.7,
+  "top_p": 0.8,
+  "repetition_penalty": 1.05,
+  "max_tokens": 512
+}'
+```
+
+----------------------------------------
+
+TITLE: Setting up and Running RetrievalQA Chain with LangChain (Python)
+DESCRIPTION: This snippet configures a LangChain RetrievalQA chain. It uses a predefined prompt template, a language model (llm), a document retriever (docsearch), and specific chain type arguments. Finally, it executes a sample query against the configured chain.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/Langchain.rst#_snippet_7
+
+LANGUAGE: Python
+CODE:
+```
+template=PROMPT_TEMPLATE, input_variables=["context_str", "question"]
+        )
+
+        chain_type_kwargs = {"prompt": prompt, "document_variable_name": "context_str"}
+        qa = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type=CHAIN_TYPE,
+            retriever=docsearch.as_retriever(search_kwargs={"k": VECTOR_SEARCH_TOP_K}),
+            chain_type_kwargs=chain_type_kwargs)
+
+        query = "Give me a short introduction to large language models."
+        print(qa.run(query))
+```
+
+----------------------------------------
+
+TITLE: Calling Qwen3 via vLLM OpenAI API - Python
+DESCRIPTION: Demonstrates how to configure the OpenAI client to connect to a vLLM server running the Qwen3 model and make a chat completion request. It shows setting the API key and base URL, specifying the model, providing messages, and configuring sampling parameters like temperature, top_p, top_k, max_tokens, presence_penalty, and an extra body parameter to disable thinking.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/deployment/vllm.md#_snippet_0
+
+LANGUAGE: python
+CODE:
+```
+# Set OpenAI's API key and API base to use vLLM's API server.
+openai_api_key = "EMPTY"
+openai_api_base = "http://localhost:8000/v1"
+
+client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
+
+chat_response = client.chat.completions.create(
+    model="Qwen/Qwen3-8B",
+    messages=[
+        {"role": "user", "content": "Give me a short introduction to large language models."},
+    ],
+    temperature=0.7,
+    top_p=0.8,
+    top_k=20,
+    max_tokens=8192,
+    presence_penalty=1.5,
+    extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+)
+print("Chat response:", chat_response)
+```
+
+----------------------------------------
+
+TITLE: Download Model with Hugging Face CLI (Shell)
+DESCRIPTION: Use this command to download the Qwen3-8B model files from the Hugging Face Hub to a local directory named `./Qwen3-8B`.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_1
+
+LANGUAGE: shell
+CODE:
+```
+huggingface-cli download --local-dir ./Qwen3-8B Qwen/Qwen3-8B
+```
+
+----------------------------------------
+
+TITLE: Processing and Appending Function Call Results in Qwen-Agent in Python
+DESCRIPTION: This Python code iterates through the model's responses to identify messages containing a `function_call`. For each function call, it extracts the name and arguments, calls the corresponding function (using a helper `get_function_by_name`), and appends the function's result as a new message with the role 'function' to the `messages` list.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/function_call.md#_snippet_9
+
+LANGUAGE: python
+CODE:
+```
+for message in responses:
+    if fn_call := message.get("function_call", None):
+        fn_name: str = fn_call['name']
+        fn_args: dict = json.loads(fn_call["arguments"])
+
+        fn_res: str = json.dumps(get_function_by_name(fn_name)(**fn_args))
+
+        messages.append({
+            "role": "function",
+            "name": fn_name,
+            "content": fn_res,
+        })
+```
+
+----------------------------------------
+
+TITLE: Downloading GGUF Model with huggingface-cli (Generic)
+DESCRIPTION: Provides the general command structure for downloading a GGUF model file from the Hugging Face Hub using the `huggingface-cli` tool. Requires `pip install huggingface_hub`.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/run_locally/llama.cpp.md#_snippet_4
+
+LANGUAGE: bash
+CODE:
+```
+huggingface-cli download <model_repo> <gguf_file> --local-dir <local_dir>
+```
+
+----------------------------------------
+
+TITLE: Implementing Streaming Generation with TextStreamer (Python)
+DESCRIPTION: This Python code sets up a text generation pipeline and a TextStreamer to enable real-time output streaming. The TextStreamer is initialized with the pipeline's tokenizer and configured to skip the prompt and special tokens. When the generator is called with the streamer argument, it will print the generated text incrementally to the console.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/inference/transformers.md#_snippet_10
+
+LANGUAGE: python
+CODE:
+```
+from transformers import pipeline, TextStreamer
+
+model_name_or_path = "Qwen/Qwen3-8B"
+
+generator = pipeline(
+    "text-generation", 
+    model_name_or_path, 
+    torch_dtype="auto", 
+    device_map="auto",
+)
+
+streamer = TextStreamer(pipe.tokenizer, skip_prompt=True, skip_special_tokens=True)
+
+messages= generator(messages, max_new_tokens=32768, streamer=streamer)[0]["generated_text"]
+```
+
+----------------------------------------
+
+TITLE: Building LlamaIndex from Local Documents (Python)
+DESCRIPTION: Loads documents from a local directory using `SimpleDirectoryReader` and builds a `VectorStoreIndex` from them. Uses the previously configured embedding model and transformations.
+SOURCE: https://github.com/qwenlm/qwen3/blob/main/docs/source/framework/LlamaIndex.rst#_snippet_2
+
+LANGUAGE: python
+CODE:
+```
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+    
+documents = SimpleDirectoryReader("./document").load_data()
+index = VectorStoreIndex.from_documents(
+    documents,
+    embed_model=Settings.embed_model,
+    transformations=Settings.transformations
+)
+```
